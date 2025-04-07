@@ -3,8 +3,6 @@ import { defineConfig } from 'astro/config';
 
 import tailwind from '@astrojs/tailwind';
 import react from '@astrojs/react';
-import markdoc from '@astrojs/markdoc';
-import keystatic from '@keystatic/astro';
 import icon from 'astro-icon';
 import compressor from 'astro-compressor';
 import playformCompress from '@playform/compress';
@@ -15,7 +13,7 @@ export default defineConfig({
   // Integrations with optimized order
   integrations: [react({
     include: ['**/*.{jsx,tsx}'],
-  }), tailwind(), markdoc(), icon(), compressor(), keystatic(), playformCompress()],
+  }), tailwind(), icon(), compressor(), playformCompress()],
   // Performance optimizations
   compressHTML: true,
   scopedStyleStrategy: 'class', // Better CSS specificity control

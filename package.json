@@ -17,12 +17,9 @@
     ]
   },
   "dependencies": {
-    "@astrojs/markdoc": "0.12.10",
     "@astrojs/react": "4.2.1",
     "@astrojs/tailwind": "6.0.0",
     "@fontsource/atkinson-hyperlegible": "^5.1.1",
-    "@keystatic/astro": "^5.0.5",
-    "@keystatic/core": "^0.5.45",
     "@playform/compress": "^0.1.7",
     "aos": "^3.0.0-beta.6",
     "astro": "5.4.1",

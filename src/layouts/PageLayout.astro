@@ -6,6 +6,7 @@ interface Props {
 
 const { title: pageTitle, description: pageDescription } = Astro.props;
 
+import Navbar from '@/components/Navbar.astro';
 import Backdrop from '../components/background/Backdrop.astro';
 import Layout from './Layout.astro';
 ---
@@ -15,8 +16,13 @@ import Layout from './Layout.astro';
     data-aos="fade-up"
     class="absolute top-2 left-2 right-2 bottom-2 rounded-xl backdrop-opacity-95 bg-slate-900/80"
   >
-    <div class="absolute inset-6 overflow-y-auto">
-      <slot />
+    <div class="absolute inset-10 overflow-y-auto">
+      <main class="container p-6 pt-24 h-full w=full">
+        <Navbar />
+        <div class="w-full h-full">
+          <slot />
+        </div>
+      </main>
     </div>
   </Backdrop>
 </Layout>
