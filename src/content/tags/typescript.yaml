@@ -1,0 +1,6 @@
+name: TypeScript
+type: language
+color: '#3178C6'
+icon:
+  discriminant: icon
+  value: devicon-typescript-plain

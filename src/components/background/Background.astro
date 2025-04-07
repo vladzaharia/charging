@@ -1,0 +1,15 @@
+---
+interface Props {
+  style?: string;
+  class?: string;
+}
+
+const { style: style, class: className } = Astro.props;
+---
+
+<div
+  class=`bg-center bg-auto ${className}`
+  style=`background-image: url('/background.svg');${style||""}`
+>
+  <slot />
+</div>

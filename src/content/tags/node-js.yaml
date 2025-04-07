@@ -1,0 +1,6 @@
+name: Node.js
+type: tool
+color: '#339933'
+icon:
+  discriminant: icon
+  value: devicon-nodejs-plain
