@@ -1,18 +1,15 @@
 ---
 import { Icon } from 'astro-icon/components';
-import Button from './Button.astro';
+import { ChargerButton } from './charger/ChargerButton';
 ---
 
-<div
-  class="fixed top-10 left-10 right-10 flex justify-between items-center"
->
+<div class="flex flex-none justify-between items-center">
   <h1 class="text-4xl font-display text-charge-blue" data-aos="fade-right">
-    <Icon name="wordmark" class="text-6xl" />
+    <Icon name="wordmark" class="text-6xl hidden md:block" />
+    <Icon name="logo" class="text-6xl block md:hidden" />
   </h1>
 
   <nav>
-    <Button path="contact">
-        Charge <Icon name="fa/chevron-right" class="text-lg" />
-    </Button>
+    <ChargerButton client:load />
   </nav>
 </div>

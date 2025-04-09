@@ -56,7 +56,7 @@ export const ChargerStatusBar = () => {
     : statusColors.slate;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4">
+    <div className="flex-none p-4">
       <div className={`bg-slate-900/10 border-2 rounded-xl backdrop-blur backdrop-opacity-85 drop-shadow-lg ${globalStatus.border}`}>
         <div className={`container mx-auto p-4 ${error ? 'text-red-400' : 'text-white'}`}>
           {loading && (

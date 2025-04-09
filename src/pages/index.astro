@@ -1,10 +1,9 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
-import { ChargerStatusBar } from '../components/charger/ChargerStatusBar';
 ---
 
 <PageLayout title="Polaris Charge">
-  <div class="flex flex-row w-full h-full">
+  <div class="flex flex-row flex-1">
     <div class="flex flex-col flex-auto items-center justify-center">
       Plug In
     </div>
@@ -15,5 +14,4 @@ import { ChargerStatusBar } from '../components/charger/ChargerStatusBar';
       Charge
     </div>
   </div>
-  <ChargerStatusBar client:load />
 </PageLayout>
