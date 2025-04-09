@@ -11,12 +11,12 @@ export default {
 				'charge-blue': '#25B9F3'
 			},	
 			fontFamily: {
-				display: ['Rubik', ...defaultTheme.fontFamily.sans],
-				body: ['Rubik', ...defaultTheme.fontFamily.sans],
-				sans: ['Rubik', ...defaultTheme.fontFamily.sans],
+				display: ['Maven Pro', ...defaultTheme.fontFamily.sans],
+				body: ['Maven Pro', ...defaultTheme.fontFamily.sans],
+				sans: ['Maven Pro', ...defaultTheme.fontFamily.sans],
 				mono: ['JetBrains Mono', ...defaultTheme.fontFamily.mono],
 				date: ['Space Mono', ...defaultTheme.fontFamily.mono],
-			},
+			}
 		},
 	},
 	plugins: [],

@@ -673,13 +673,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fontsource/atkinson-hyperlegible@npm:^5.1.1":
-  version: 5.1.1
-  resolution: "@fontsource/atkinson-hyperlegible@npm:5.1.1"
-  checksum: 10c0/332d6c6d43add1251d6a15a6cbb0e568b8d5526541c787104fe376f275773d835f45925aee19c194721d2e5ee3585bdaf02ba9fbfb3c4ee5134ce249e79aff0b
-  languageName: node
-  linkType: hard
-
 "@iconify/tools@npm:^4.0.5":
   version: 4.1.1
   resolution: "@iconify/tools@npm:4.1.1"
@@ -5528,7 +5521,6 @@ __metadata:
     "@astrojs/react": "npm:4.2.1"
     "@astrojs/tailwind": "npm:6.0.0"
     "@babel/parser": "npm:^7.26.9"
-    "@fontsource/atkinson-hyperlegible": "npm:^5.1.1"
     "@playform/compress": "npm:^0.1.7"
     "@types/aos": "npm:^3.0.7"
     "@types/node": "npm:^22.13.4"

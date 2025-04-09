@@ -79,13 +79,16 @@ export const ChargerStatusBar = () => {
                 {status.model && <span className="text-gray-400 text-sm">{status.model.name}</span>}
               </div>
               <div className="flex items-center gap-6">
-                {status.connectors.map((connector) => (
+                {status.connection_status === 'online' && status.connectors.map((connector) => (
                   <ConnectorStatus
                     key={connector.connector_id}
                     connector={connector}
                     statusColor={getConnectorStatusColor(connector.status)}
                   />
                 ))}
+                {status.connection_status === 'offline' && (
+                  <span className="text-red-400 text-lg">Charger Offline</span>
+                )}
               </div>
             </div>
           )}
