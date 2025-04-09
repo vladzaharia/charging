@@ -1,5 +1,6 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
+import { ChargerStatusBar } from '../components/charger/ChargerStatusBar';
 ---
 
 <PageLayout title="Polaris Charge">
@@ -14,4 +15,5 @@ import PageLayout from '../layouts/PageLayout.astro';
       Charge
     </div>
   </div>
+  <ChargerStatusBar client:load />
 </PageLayout>
