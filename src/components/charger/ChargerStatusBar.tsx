@@ -9,11 +9,13 @@ const getConnectorStatusColor = (status: ConnectorStatusType): ColorSet => {
     case 'Available':
       return statusColors.green;
     case 'Preparing':
+    case 'Finishing':
+    case 'Paused':
+    case 'SuspendedEVSE':
       return statusColors.yellow;
     case 'Charging':
       return statusColors.blue;
     case 'Faulted':
-    case 'Unavailable':
       return statusColors.red;
     default:
       return statusColors.slate;

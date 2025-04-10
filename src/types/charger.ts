@@ -10,7 +10,11 @@ export type ConnectorStatus =
   | 'Charging'
   | 'Faulted'
   | 'Unavailable'
-  | 'Unknown';
+  | 'Unknown'
+  | 'Unregistered'
+  | 'Finishing'
+  | 'SuspendedEVSE'
+  | 'Paused';
 
 export interface Connector {
   connector_id: number;

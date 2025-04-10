@@ -27,14 +27,18 @@ export const GET: APIRoute = async ({ params }) => {
       (voltTimeConnector: VoltTimeConnector) => {
         // Find matching Supabase connector by ID
         const supabaseConnector = charger.connectors?.find(
-          (c) => c.connector_id === voltTimeConnector.connector_id
+          (c) => c.connector_id === voltTimeConnector.id
         );
 
         return {
           connector_id: voltTimeConnector.connector_id,
-          status: voltTimeConnector.status,
+          status: supabaseConnector?.connector_type
+            ? voltTimeConnector.status === 'SuspendedEVSE'
+              ? 'Paused'
+              : voltTimeConnector.status
+            : 'Unregistered',
           max_amperage: voltTimeConnector.max_amperage,
-          type: supabaseConnector?.connector_type ?? 'j1772', // Default to j1772 if not found
+          type: supabaseConnector?.connector_type ?? 'Unregistered',
         };
       }
     );
