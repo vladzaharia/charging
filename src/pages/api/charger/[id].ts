@@ -46,6 +46,7 @@ export const GET: APIRoute = async ({ params }) => {
     return new Response(
       JSON.stringify({
         ...data.data,
+        code: charger.id,
         connectors: enhancedConnectors,
       }),
       {

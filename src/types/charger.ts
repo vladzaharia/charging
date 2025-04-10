@@ -27,6 +27,7 @@ export type ChargerConnectionStatus = 'online' | 'offline' | 'unknown';
 export type ChargerStatus = 'Available' | 'Unavailable' | 'Offline' | 'Unknown';
 
 export interface Charger {
+  code: string;
   reference?: string;
   connection_status: ChargerConnectionStatus;
   status: ChargerStatus;
