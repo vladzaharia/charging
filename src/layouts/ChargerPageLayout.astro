@@ -1,0 +1,22 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  chargerId: string;
+}
+
+const { title: pageTitle, description: pageDescription, chargerId } = Astro.props;
+
+import Navbar from '@/components/Navbar.astro';
+import Backdrop from '../components/background/Backdrop.astro';
+import { ChargerStatusBar } from '@/components/charger/ChargerStatusBar';
+import PageLayout from './PageLayout.astro';
+---
+
+<PageLayout title={pageTitle} description={pageDescription}>
+  <main class="flex flex-col p-6 h-full">
+    <Navbar {chargerId} />
+    <slot />
+    <ChargerStatusBar client:load {chargerId} />
+  </main>
+</PageLayout>

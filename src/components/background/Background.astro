@@ -7,7 +7,7 @@ interface Props {
 const { style: style, class: className } = Astro.props;
 ---
 
-<div class={`relative w-full h-full ${className || ""}`} style={style}>
+<div class={`relative w-full h-full ${className || ''}`} {style}>
   <div class="pattern absolute inset-0 w-full h-full">
     <svg
       class="svg-tile"
@@ -45,7 +45,7 @@ const { style: style, class: className } = Astro.props;
   /* Create copies of the SVG for tiling */
   .svg-tile::before,
   .svg-tile::after {
-    content: "";
+    content: '';
     position: absolute;
     width: 100%;
     height: 100%;
@@ -65,7 +65,7 @@ const { style: style, class: className } = Astro.props;
   /* Additional tiles for vertical coverage */
   .pattern::before,
   .pattern::after {
-    content: "";
+    content: '';
     position: absolute;
     width: 4500px; /* 3x the SVG width to ensure coverage */
     height: 1500px;
@@ -84,77 +84,80 @@ const { style: style, class: className } = Astro.props;
 
 <script>
   class AnimatedBackground {
-    private static readonly CHARGE_GREEN = "rgb(70,236,140)";
-    private static readonly CHARGE_BLUE = "rgb(49,186,255)";
+    private static readonly CHARGE_GREEN = 'rgb(70,236,140)';
+    private static readonly CHARGE_BLUE = 'rgb(49,186,255)';
     private static readonly ANIMATION_DURATION = 2000; // 2 seconds
     private static readonly MIN_PATHS = 3;
     private static readonly MAX_PATHS = 8;
-    
+
     private paths: SVGPathElement[] = [];
     private animatingPaths = new Set<SVGPathElement>();
     private pathColors = new Map<SVGPathElement, string>();
-    
+
     constructor() {
       this.init();
     }
-    
+
     private init() {
       // Get all paths from the SVG
-      const pathsGroup = document.querySelector("#paths");
+      const pathsGroup = document.querySelector('#paths');
       if (!pathsGroup) return;
-      
+
       // Import the SVG paths from the static file
-      fetch("/background.svg")
-        .then(response => response.text())
-        .then(svgText => {
+      fetch('/background.svg')
+        .then((response) => response.text())
+        .then((svgText) => {
           const parser = new DOMParser();
-          const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
-          const paths = Array.from(svgDoc.querySelectorAll("path"));
-          
+          const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+          const paths = Array.from(svgDoc.querySelectorAll('path'));
+
           // Set initial color and append paths
-          paths.forEach(path => {
+          paths.forEach((path) => {
             const clone = path.cloneNode(true) as SVGPathElement;
             clone.style.fill = AnimatedBackground.CHARGE_GREEN;
             clone.style.transition = `fill ${AnimatedBackground.ANIMATION_DURATION}ms ease-in-out`;
             pathsGroup.appendChild(clone);
             this.pathColors.set(clone, AnimatedBackground.CHARGE_GREEN);
           });
-          
-          this.paths = Array.from(pathsGroup.querySelectorAll("path"));
+
+          this.paths = Array.from(pathsGroup.querySelectorAll('path'));
           this.startAnimation();
         });
     }
-    
+
     private startAnimation() {
       setInterval(() => this.animate(), 3000);
     }
-    
+
     private animate() {
-      const availablePaths = this.paths.filter(p => !this.animatingPaths.has(p));
+      const availablePaths = this.paths.filter((p) => !this.animatingPaths.has(p));
       if (availablePaths.length === 0) return;
-      
-      const numPaths = Math.floor(Math.random() * 
-        (AnimatedBackground.MAX_PATHS - AnimatedBackground.MIN_PATHS + 1)) + 
-        AnimatedBackground.MIN_PATHS;
-      
+
+      const numPaths =
+        Math.floor(
+          Math.random() * (AnimatedBackground.MAX_PATHS - AnimatedBackground.MIN_PATHS + 1)
+        ) + AnimatedBackground.MIN_PATHS;
+
       // Pick random paths to animate
       for (let i = 0; i < Math.min(numPaths, availablePaths.length); i++) {
         const randomIndex = Math.floor(Math.random() * availablePaths.length);
         const selectedPath = availablePaths[randomIndex];
         if (!selectedPath) continue;
-        
+
         availablePaths.splice(randomIndex, 1);
         this.animatingPaths.add(selectedPath);
-        
+
         // Get current color and determine target color
         const currentColor = this.pathColors.get(selectedPath) || AnimatedBackground.CHARGE_GREEN;
-        const targetColor = currentColor === AnimatedBackground.CHARGE_GREEN ? 
-          AnimatedBackground.CHARGE_BLUE : AnimatedBackground.CHARGE_GREEN;
-        
+        const targetColor =
+          currentColor === AnimatedBackground.CHARGE_GREEN
+            ? AnimatedBackground.CHARGE_BLUE
+            : AnimatedBackground.CHARGE_GREEN;
+
         // Animate to target color
         selectedPath.style.fill = targetColor;
         this.pathColors.set(selectedPath, targetColor);
-        
+
         // Remove from animating after transition completes
         setTimeout(() => {
           this.animatingPaths.delete(selectedPath);

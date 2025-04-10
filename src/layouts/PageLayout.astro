@@ -6,10 +6,8 @@ interface Props {
 
 const { title: pageTitle, description: pageDescription } = Astro.props;
 
-import Navbar from '@/components/Navbar.astro';
 import Backdrop from '../components/background/Backdrop.astro';
 import Layout from './Layout.astro';
-import { ChargerStatusBar } from '@/components/charger/ChargerStatusBar';
 ---
 
 <Layout title={pageTitle} description={pageDescription}>
@@ -17,10 +15,6 @@ import { ChargerStatusBar } from '@/components/charger/ChargerStatusBar';
     data-aos="fade-up"
     class="absolute top-2 left-2 right-2 bottom-2 rounded-xl backdrop-opacity-95 bg-slate-900/80"
   >
-    <main class="flex flex-col p-6 h-full">
-      <Navbar />
-      <slot />
-      <ChargerStatusBar client:load />
-    </main>
+    <slot />
   </Backdrop>
 </Layout>

@@ -1,17 +1,20 @@
 ---
-import PageLayout from '../layouts/PageLayout.astro';
----
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '../types/supabase';
 
-<PageLayout title="Polaris Charge">
-  <div class="flex flex-row flex-1">
-    <div class="flex flex-col flex-auto items-center justify-center">
-      Plug In
-    </div>
-    <div class="flex flex-col flex-auto items-center justify-center">
-      Tap Card
-    </div>
-    <div class="flex flex-col flex-auto items-center justify-center">
-      Charge
-    </div>
-  </div>
-</PageLayout>
+// Get default charger ID from Supabase
+const supabase = createClient<Database>(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+);
+
+const { data: defaultChargerId, error } = await supabase.rpc('get_default_charger_id');
+if (!defaultChargerId && !error) {
+  return new Response('No default charger configured', { status: 500 });
+} else if (error) {
+  return new Response(`Failed to get default charger: ${error.message}`, { status: 500 });
+}
+
+// Redirect to the default charger page
+return Astro.redirect(`/charger/${defaultChargerId}`);
+---

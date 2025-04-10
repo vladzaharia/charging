@@ -20,25 +20,24 @@ create index if not exists idx_chargers_site_id on public.chargers(site_id);
 create index if not exists idx_chargers_charger_uuid on public.chargers(charger_uuid);
 create index if not exists idx_chargers_charger_id on public.chargers(charger_id);
 
--- Function to get the default charger
-create or replace function get_default_charger()
-returns table (
-    id char(8),
-    charger_uuid uuid,
-    charger_id integer,
-    site_uuid uuid,
-    site_id integer,
-    is_hidden boolean,
-    is_default boolean
-) as $$
+-- Function to get the default charger ID
+create or replace function get_default_charger_id()
+returns char(8) as $$
+declare
+    default_id char(8);
 begin
-    return query
-    select c.*
+    select c.id into default_id
     from public.chargers c
     where c.is_default
+        and not c.is_hidden -- Only return non-hidden chargers
     limit 1;
+
+    return default_id;
 end;
-$$ language plpgsql stable;
+$$ language plpgsql stable security definer;
+
+-- Grant access to the function for anonymous users
+grant execute on function get_default_charger_id to anon;
 
 -- Trigger function to ensure only one default charger exists
 create or replace function ensure_single_default_charger()
@@ -66,22 +65,19 @@ create trigger maintain_single_default_charger
 alter table public.chargers enable row level security;
 
 -- Create a policy for reading chargers
--- Unauthenticated users can see non-hidden chargers
--- Administrators can see all chargers
+-- Anyone can see non-hidden chargers
 create policy "Chargers are viewable by everyone if not hidden"
     on public.chargers
     for select
+    using (not is_hidden);
+
+-- Create a policy for administrators to see all chargers
+create policy "Administrators can view all chargers"
+    on public.chargers
+    for select
     using (
-        not is_hidden or  -- Allow non-hidden chargers for everyone
-        (
-            auth.role() = 'authenticated' and  -- Check if user is authenticated
-            exists (  -- Check if user has administrator role
-                select 1
-                from auth.users
-                where auth.users.id = auth.uid()
-                and auth.users.role = 'Administrator'
-            )
-        )
+        auth.role() = 'authenticated' and
+        auth.jwt()->>'role' = 'Administrator'
     );
 
 -- Create a view for visible chargers
@@ -90,10 +86,5 @@ select c.*
 from public.chargers c
 where not c.is_hidden or (
     auth.role() = 'authenticated' and
-    exists (
-        select 1
-        from auth.users
-        where auth.users.id = auth.uid()
-        and auth.users.role = 'Administrator'
-    )
+    auth.jwt()->>'role' = 'Administrator'
 );

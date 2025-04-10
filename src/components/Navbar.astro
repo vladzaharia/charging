@@ -1,6 +1,12 @@
 ---
 import { Icon } from 'astro-icon/components';
 import { ChargerButton } from './charger/ChargerButton';
+
+interface Props {
+  chargerId: string;
+}
+
+const { chargerId } = Astro.props;
 ---
 
 <div class="flex flex-none justify-between items-center">
@@ -10,6 +16,6 @@ import { ChargerButton } from './charger/ChargerButton';
   </h1>
 
   <nav>
-    <ChargerButton client:load />
+    <ChargerButton client:load {chargerId} />
   </nav>
 </div>

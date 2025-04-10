@@ -1,10 +1,10 @@
-import type { Charger, Connector } from "./charger";
+import type { Charger, Connector } from './charger';
 
 // Internal types for VoltTime API
 export interface VoltTimeConnector extends Connector {
   id: number;
   charger_id: number;
-  error: string | "NoError";
+  error: string | 'NoError';
   error_info: string | null;
   created_at: string;
   updated_at: string;
@@ -15,7 +15,7 @@ export interface VoltTimeChargerInternal extends Charger {
   id: number;
   identity: string;
   reference: string;
-  error: string | "NoError";
+  error: string | 'NoError';
   error_info: string | null;
   created_at: string;
   updated_at: string;
@@ -26,6 +26,8 @@ export interface VoltTimeResponse<T> {
   data: T;
 }
 
-export type VoltTimeChargerResponse = VoltTimeResponse<{
-  deprecation?: string;
-} & VoltTimeChargerInternal>;
+export type VoltTimeChargerResponse = VoltTimeResponse<
+  {
+    deprecation?: string;
+  } & VoltTimeChargerInternal
+>;

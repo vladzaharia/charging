@@ -25,27 +25,29 @@ create index if not exists idx_connectors_connector_id on public.connectors(conn
 alter table public.connectors enable row level security;
 
 -- Create a policy for reading connectors
--- Visibility is inherited from the parent charger
-create policy "Connectors inherit visibility from parent charger"
+-- Anyone can see connectors of non-hidden chargers
+create policy "Connectors of non-hidden chargers are viewable by everyone"
     on public.connectors
     for select
     using (
         exists (
             select 1 from public.chargers
             where chargers.id = connectors.charger_id
-            and (
-                not chargers.is_hidden or  -- Allow non-hidden chargers for everyone
-                (
-                    auth.role() = 'authenticated' and  -- Check if user is authenticated
-                    exists (  -- Check if user has administrator role
-                        select 1
-                        from auth.users
-                        where auth.users.id = auth.uid()
-                        and auth.users.role = 'Administrator'
-                    )
-                )
-            )
+            and not chargers.is_hidden
         )
+    );
+
+-- Create a policy for administrators to see all connectors
+create policy "Administrators can view all connectors"
+    on public.connectors
+    for select
+    using (
+        exists (
+            select 1 from public.chargers
+            where chargers.id = connectors.charger_id
+        ) and
+        auth.role() = 'authenticated' and
+        auth.jwt()->>'role' = 'Administrator'
     );
 
 -- Create a view for visible connectors with their charger information
@@ -62,72 +64,5 @@ from public.connectors con
 join public.chargers ch on ch.id = con.charger_id
 where not ch.is_hidden or (
     auth.role() = 'authenticated' and
-    exists (
-        select 1
-        from auth.users
-        where auth.users.id = auth.uid()
-        and auth.users.role = 'Administrator'
-    )
+    auth.jwt()->>'role' = 'Administrator'
 );
-
--- Function to get charger with its connectors
-create or replace function get_charger_with_connectors(charger_id_param char(8))
-returns json as $$
-declare
-    result json;
-begin
-    -- Check if user has access to the charger
-    if not exists (
-        select 1 from public.chargers
-        where id = charger_id_param
-        and (
-            not is_hidden or
-            (
-                auth.role() = 'authenticated' and
-                exists (
-                    select 1
-                    from auth.users
-                    where auth.users.id = auth.uid()
-                    and auth.users.role = 'Administrator'
-                )
-            )
-        )
-    ) then
-        return null; -- Return null if user doesn't have access
-    end if;
-
-    -- Get charger and its connectors
-    select 
-        json_build_object(
-            'charger', json_build_object(
-                'id', c.id,
-                'charger_uuid', c.charger_uuid,
-                'charger_id', c.charger_id,
-                'site_uuid', c.site_uuid,
-                'site_id', c.site_id,
-                'is_hidden', c.is_hidden,
-                'is_default', c.is_default
-            ),
-            'connectors', coalesce(
-                (
-                    select json_agg(
-                        json_build_object(
-                            'id', con.id,
-                            'connector_id', con.connector_id,
-                            'connector_idx', con.connector_idx,
-                            'connector_type', con.connector_type
-                        )
-                        order by con.connector_idx
-                    )
-                    from public.connectors con
-                    where con.charger_id = c.id
-                ),
-                '[]'::json
-            )
-        ) into result
-    from public.chargers c
-    where c.id = charger_id_param;
-
-    return result;
-end;
-$$ language plpgsql stable security definer;

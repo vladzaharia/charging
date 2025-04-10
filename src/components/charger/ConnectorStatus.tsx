@@ -13,10 +13,7 @@ interface ConnectorStatusProps {
 export const ConnectorStatus = ({ connector, statusColor }: ConnectorStatusProps) => {
   return (
     <div className="flex flex-col justify-center gap-4 items-center space-x-2">
-      <ConnectorIcon
-        connector={connector}
-        className={`w-12 h-12 ${statusColor.fill}`}
-      />
+      <ConnectorIcon connector={connector} className={`w-12 h-12 ${statusColor.fill}`} />
       <span className={`px-2 py-1 rounded ${statusColor.bg} text-slate-900`}>
         {connector.status}
       </span>

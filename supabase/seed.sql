@@ -9,7 +9,7 @@ insert into public.chargers (
 ) values 
 (
     '01e06a42-62f3-498f-acb0-3ed5b66a3c53',  -- Testbed charger UUID
-    '52811252',
+    52811252,
     '16b8d5ef-3f6d-412c-8aa5-e60fe707d951',  -- Testbed site UUID
     5099,
     false,
@@ -17,7 +17,7 @@ insert into public.chargers (
 ),
 (
     '326edcc4-71d6-40e3-90c6-af3ed8779b21',  -- Cap Hill charger UUID
-    '52811251',
+    52811251,
     'e8d339a2-e241-4500-b81f-54aaf2c8eaae',  -- Cap Hill site UUID
     5098,
     true,
