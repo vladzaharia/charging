@@ -1,5 +1,6 @@
 {
   "windsurf.cascadeCommandsAllowList": ["ls", "cd", "cat"],
   "terminal.integrated.defaultProfile.osx": "bash",
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "cSpell.words": ["nacs"]
 }
