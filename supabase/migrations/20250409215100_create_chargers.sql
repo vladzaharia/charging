@@ -30,6 +30,11 @@ begin
     from public.chargers c
     where c.is_default
         and not c.is_hidden -- Only return non-hidden chargers
+        and exists ( -- Check if user has permission to view
+            select 1 from auth.users
+            where auth.uid() = id
+            and has_permission(auth.uid(), 'charger', c.id, 'viewer'::permission_level)
+        )
     limit 1;
 
     return default_id;
@@ -49,42 +54,57 @@ begin
         set is_default = false
         where id != new.id;
     end if;
+    
+    -- Allow service role or managers to modify default charger
+    if auth.role() != 'service_role' and not has_permission(auth.uid(), 'charger', new.id, 'manager'::permission_level) then
+        raise exception 'Only managers can modify default charger status';
+    end if;
     return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer;
 
--- Create trigger to maintain single default charger
-create trigger maintain_single_default_charger
-    before insert or update of is_default
-    on public.chargers
+-- Create trigger for default charger
+create trigger ensure_single_default_charger_trigger
+    before insert or update on public.chargers
     for each row
-    when (new.is_default)
     execute function ensure_single_default_charger();
 
--- Enable Row Level Security on chargers
+-- Enable RLS
 alter table public.chargers enable row level security;
 
--- Create a policy for reading chargers
--- Anyone can see non-hidden chargers
-create policy "Chargers are viewable by everyone if not hidden"
-    on public.chargers
-    for select
-    using (not is_hidden);
-
--- Create a policy for administrators to see all chargers
-create policy "Administrators can view all chargers"
+-- RLS Policies
+-- Viewers can see non-hidden chargers
+create policy "Viewers can see non-hidden chargers"
     on public.chargers
     for select
     using (
-        auth.role() = 'authenticated' and
-        auth.jwt()->>'role' = 'Administrator'
+        has_permission(auth.uid(), 'charger', id, 'viewer'::permission_level)
+        and not is_hidden
     );
 
--- Create a view for visible chargers
-create or replace view visible_chargers as
-select c.*
-from public.chargers c
-where not c.is_hidden or (
-    auth.role() = 'authenticated' and
-    auth.jwt()->>'role' = 'Administrator'
-);
+-- Editors can see all chargers including hidden ones
+create policy "Editors can see all chargers"
+    on public.chargers
+    for select
+    using (
+        has_permission(auth.uid(), 'charger', id, 'editor'::permission_level)
+    );
+
+-- Only managers can modify chargers
+create policy "Managers can modify chargers"
+    on public.chargers
+    for all
+    using (
+        has_permission(auth.uid(), 'charger', id, 'manager'::permission_level)
+    )
+    with check (
+        has_permission(auth.uid(), 'charger', id, 'manager'::permission_level)
+    );
+
+-- Enable audit tracking
+SELECT audit.enable_tracking('public.chargers');
+
+-- Grant permissions
+grant usage on schema public to authenticated;
+grant all on public.chargers to authenticated;
+grant usage, select on all sequences in schema public to authenticated;

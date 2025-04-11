@@ -25,24 +25,27 @@ insert into public.chargers (
 );
 
 -- Sample connector data (after chargers are created)
+with testbed_charger as (
+    select id 
+    from public.chargers 
+    where charger_id = 52811252  -- Testbed charger
+)
 insert into public.connectors (
     charger_id,
     connector_id,
     connector_idx,
     connector_type
 ) 
-select 
-    c.id,  -- Get the charger's internal ID
+values 
+(
+    (select id from testbed_charger),
     5875,  -- Connector ID for first connector
-    1,  -- First connector index
-    'j1772'::connector_type  -- Type with explicit cast
-from public.chargers c
-where c.charger_id = 52811252
-union all
-select 
-    c.id,  -- Get the charger's internal ID
+    1,     -- First connector index
+    'j1772'::connector_type
+),
+(
+    (select id from testbed_charger),
     5876,  -- Connector ID for second connector
-    2,  -- Second connector index
-    'j1772'::connector_type  -- Type with explicit cast
-from public.chargers c
-where c.charger_id = 52811252
+    2,     -- Second connector index
+    'j1772'::connector_type
+)

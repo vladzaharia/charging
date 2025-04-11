@@ -24,9 +24,9 @@ create index if not exists idx_connectors_connector_id on public.connectors(conn
 -- Enable Row Level Security on connectors
 alter table public.connectors enable row level security;
 
--- Create a policy for reading connectors
--- Anyone can see connectors of non-hidden chargers
-create policy "Connectors of non-hidden chargers are viewable by everyone"
+-- RLS Policies
+-- Viewers can see connectors of non-hidden chargers
+create policy "Viewers can see connectors of non-hidden chargers"
     on public.connectors
     for select
     using (
@@ -34,21 +34,48 @@ create policy "Connectors of non-hidden chargers are viewable by everyone"
             select 1 from public.chargers
             where chargers.id = connectors.charger_id
             and not chargers.is_hidden
+            and has_permission(auth.uid(), 'charger', chargers.id, 'viewer'::permission_level)
         )
     );
 
--- Create a policy for administrators to see all connectors
-create policy "Administrators can view all connectors"
+-- Editors can see all connectors
+create policy "Editors can see all connectors"
     on public.connectors
     for select
     using (
         exists (
             select 1 from public.chargers
             where chargers.id = connectors.charger_id
-        ) and
-        auth.role() = 'authenticated' and
-        auth.jwt()->>'role' = 'Administrator'
+            and has_permission(auth.uid(), 'charger', chargers.id, 'editor'::permission_level)
+        )
     );
+
+-- Only managers can modify connectors
+create policy "Managers can modify connectors"
+    on public.connectors
+    for all
+    using (
+        exists (
+            select 1 from public.chargers
+            where chargers.id = connectors.charger_id
+            and has_permission(auth.uid(), 'charger', chargers.id, 'manager'::permission_level)
+        )
+    )
+    with check (
+        exists (
+            select 1 from public.chargers
+            where chargers.id = connectors.charger_id
+            and has_permission(auth.uid(), 'charger', chargers.id, 'manager'::permission_level)
+        )
+    );
+
+-- Enable audit tracking
+SELECT audit.enable_tracking('public.connectors');
+
+-- Grant permissions
+grant usage on schema public to authenticated;
+grant all on public.connectors to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
 
 -- Create a view for visible connectors with their charger information
 create or replace view visible_connectors as
@@ -62,7 +89,9 @@ select
     ch.is_default
 from public.connectors con
 join public.chargers ch on ch.id = con.charger_id
-where not ch.is_hidden or (
-    auth.role() = 'authenticated' and
-    auth.jwt()->>'role' = 'Administrator'
+where (
+    -- Show non-hidden chargers to viewers
+    (not ch.is_hidden and has_permission(auth.uid(), 'charger', ch.id, 'viewer'::permission_level))
+    -- Show all chargers to editors and managers
+    or has_permission(auth.uid(), 'charger', ch.id, 'editor'::permission_level)
 );
