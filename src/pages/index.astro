@@ -1,20 +1,19 @@
 ---
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '../types/supabase';
-
-// Get default charger ID from Supabase
-const supabase = createClient<Database>(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-);
-
-const { data: defaultChargerId, error } = await supabase.rpc('get_default_charger_id');
-if (!defaultChargerId && !error) {
-  return new Response('No default charger configured', { status: 500 });
-} else if (error) {
-  return new Response(`Failed to get default charger: ${error.message}`, { status: 500 });
-}
-
-// Redirect to the default charger page
-return Astro.redirect(`/charger/${defaultChargerId}`);
+import Navbar from '../components/Navbar.astro';
+import { Icon } from 'astro-icon/components';
+import PageLayout from '@/layouts/PageLayout.astro';
 ---
+
+<PageLayout title="Polaris Express">
+  <main class="flex flex-col p-6 h-full">
+    <Navbar />
+
+    <section class="flex flex-col items-center justify-center gap-8 text-center flex-1">
+      <h1 class="text-4xl font-semibold">Welcome to Polaris Express</h1>
+      <p class="text-xl text-gray-400 max-w-2xl">
+        To begin charging your vehicle, scan the QR code on your charging station or click the scan
+        button in the top-right corner.
+      </p>
+    </section>
+  </main>
+</PageLayout>

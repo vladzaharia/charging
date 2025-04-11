@@ -10,7 +10,7 @@ import playformCompress from '@playform/compress';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://charge.polaris.gdn',
+  site: 'https://polaris.express',
   // Integrations with optimized order
   integrations: [react({
     include: ['**/*.{jsx,tsx}'],
@@ -29,7 +29,7 @@ export default defineConfig({
   }),
   vite: {
     server: {
-      allowedHosts: ['.z.polaris.gdn', 'charge.polaris.gdn'],
+      allowedHosts: ['.z.polaris.gdn', 'polaris.express'],
     },
     ssr: {
       external: ['process', 'fs', 'os', 'crypto', 'async_hooks'].map((i) => `node:${i}`),

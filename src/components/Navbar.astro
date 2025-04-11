@@ -4,7 +4,7 @@ import { ChargerButton } from './charger/ChargerButton';
 import Button from './Button.astro';
 
 interface Props {
-  chargerId: string;
+  chargerId?: string;
 }
 
 const { chargerId } = Astro.props;
@@ -17,8 +17,8 @@ const { chargerId } = Astro.props;
   </h1>
 
   <nav class="flex flex-row gap-4">
-    <ChargerButton client:load {chargerId} />
-    <Button path="/scan" class="text-3xl">
+    {chargerId && <ChargerButton client:load {chargerId} />}
+    <Button path="/scan" class="text-3xl hover:fill-slate-900">
       <Icon name="fa/scan-button-color" />
     </Button>
   </nav>
