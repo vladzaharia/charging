@@ -1,6 +1,7 @@
 ---
 import { Icon } from 'astro-icon/components';
 import { ChargerButton } from './charger/ChargerButton';
+import { AuthButton } from './auth/AuthButton';
 import Button from './Button.astro';
 
 interface Props {
@@ -21,5 +22,6 @@ const { chargerId } = Astro.props;
     <Button path="/scan" class="text-3xl hover:fill-slate-900">
       <Icon name="fa/scan-button-color" />
     </Button>
+    <AuthButton client:load />
   </nav>
 </div>
