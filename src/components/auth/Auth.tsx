@@ -4,6 +4,8 @@ import { ButtonReact } from '../button/ButtonReact';
 import { supabase } from '../../lib/supabase';
 import type { Provider } from '@supabase/supabase-js';
 
+type AuthMode = 'signin' | 'signup' | 'recover';
+
 interface AuthProps {
   isOpen: boolean;
   onClose: () => void;
@@ -12,6 +14,9 @@ interface AuthProps {
 export const Auth = ({ isOpen, onClose }: AuthProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<AuthMode>('signin');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>();
 
   const handleSocialLogin = async (provider: Provider) => {
     try {
@@ -45,7 +50,46 @@ export const Auth = ({ isOpen, onClose }: AuthProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement email/password auth
+    setError(undefined);
+    setLoading(true);
+
+    try {
+      let result;
+
+      if (mode === 'signin') {
+        result = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+      } else if (mode === 'signup') {
+        result = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+      } else if (mode === 'recover') {
+        result = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+        });
+
+        if (!result.error) {
+          setError('Check your email for the recovery link');
+          return;
+        }
+      }
+
+      if (result?.error) {
+        setError(result.error.message);
+      } else {
+        onClose();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -101,32 +145,74 @@ export const Auth = ({ isOpen, onClose }: AuthProps) => {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label htmlFor="password" className="font-display text-charge-blue">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-slate-900/10 border-2 border-slate-400/15 rounded-xl p-4 font-display focus:border-charge-green outline-none transition-colors"
-              required
-            />
+            {mode !== 'recover' && (
+              <>
+                <label htmlFor="password" className="font-display text-charge-blue">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-slate-900/10 border-2 border-slate-400/15 rounded-xl p-4 font-display focus:border-charge-green outline-none transition-colors"
+                  required
+                  minLength={6}
+                />
+              </>
+            )}
           </div>
 
-          <ButtonReact type="submit" variant="primary" className="mt-4">
-            Sign In
+          {error && <p className="text-red-500 text-sm font-display text-center">{error}</p>}
+
+          <ButtonReact type="submit" variant="primary" className="mt-4" disabled={loading}>
+            {mode === 'signin' && 'Sign In'}
+            {mode === 'signup' && 'Create Account'}
+            {mode === 'recover' && 'Send Recovery Email'}
           </ButtonReact>
 
           <hr className="m-2 border-slate-400/50" />
 
           <div className="flex gap-4 mt-2">
-            <ButtonReact type="button" variant="secondary" className="flex-1 text-sm p-2">
-              Sign Up
-            </ButtonReact>
-            <ButtonReact type="button" variant="secondary" className="flex-1 text-sm p-2">
-              Recover
-            </ButtonReact>
+            {mode === 'signin' && (
+              <>
+                <ButtonReact
+                  type="button"
+                  variant="secondary"
+                  className="flex-1 text-sm p-2"
+                  onClick={() => {
+                    setMode('signup');
+                    setError(undefined);
+                  }}
+                >
+                  Sign Up
+                </ButtonReact>
+                <ButtonReact
+                  type="button"
+                  variant="secondary"
+                  className="flex-1 text-sm p-2"
+                  onClick={() => {
+                    setMode('recover');
+                    setError(undefined);
+                  }}
+                >
+                  Recover
+                </ButtonReact>
+              </>
+            )}
+            {mode !== 'signin' && (
+              <ButtonReact
+                type="button"
+                variant="secondary"
+                className="flex-1 text-sm p-2"
+                onClick={() => {
+                  setMode('signin');
+                  setError(undefined);
+                }}
+              >
+                Back to Sign In
+              </ButtonReact>
+            )}
           </div>
         </form>
       </div>
