@@ -82,8 +82,16 @@ create policy "Viewers can see non-hidden chargers"
         and not is_hidden
     );
 
--- Editors can see all chargers including hidden ones
-create policy "Editors can see all chargers"
+-- Anonymous users can view non-hidden chargers
+create policy "Anonymous users can view non-hidden chargers"
+    on public.chargers
+    for select
+    using (
+        not is_hidden
+    );
+
+-- Editors can view all chargers
+create policy "Editors can view all chargers"
     on public.chargers
     for select
     using (
@@ -105,6 +113,7 @@ create policy "Managers can modify chargers"
 SELECT audit.enable_tracking('public.chargers');
 
 -- Grant permissions
-grant usage on schema public to authenticated;
+grant usage on schema public to anon, authenticated;
+grant select on public.chargers to anon;
 grant all on public.chargers to authenticated;
-grant usage, select on all sequences in schema public to authenticated;
+grant usage, select on all sequences in schema public to anon, authenticated;

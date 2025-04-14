@@ -17,8 +17,8 @@ export class VoltTimeService {
   private readonly apiKey: string;
 
   constructor() {
-    const teamId = import.meta.env.VOLTTIME_TEAM_ID;
-    const apiKey = import.meta.env.VOLTTIME_API_KEY;
+    const teamId = process.env.VOLTTIME_TEAM_ID;
+    const apiKey = process.env.VOLTTIME_API_KEY;
 
     if (!teamId || !apiKey) {
       throw new Error('Missing required VoltTime configuration');

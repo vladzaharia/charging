@@ -1,0 +1,42 @@
+@import 'tailwindcss';
+
+@layer theme {
+  :root {
+    --colors-charge-green: #44ff92;
+    --colors-charge-blue: #25b9f3;
+
+    --font-maven-pro: var(--font-maven-pro);
+    --font-jetbrains-mono: var(--font-jetbrains-mono);
+    --font-space-mono: var(--font-space-mono);
+
+    --font-family-display: var(--font-maven-pro), var(--font-family-sans);
+    --font-family-body: var(--font-maven-pro), var(--font-family-sans);
+    --font-family-sans: var(--font-maven-pro), var(--font-family-sans);
+    --font-family-mono: var(--font-jetbrains-mono), var(--font-family-mono);
+    --font-family-date: var(--font-space-mono), var(--font-family-mono);
+  }
+}
+
+/* Custom styles */
+[data-glow] {
+  position: relative;
+}
+
+[data-glow]::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklab, var(--glow-color, var(--colors-charge-blue)) 75%, transparent),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+[data-glow][data-glow-hover]:hover::after {
+  opacity: 1;
+}

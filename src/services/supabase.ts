@@ -15,23 +15,16 @@ export class SupabaseError extends Error {
 
 export class SupabaseService {
   private static instance: SupabaseService;
-  private static client: SupabaseClient<Database>;
+  public client: SupabaseClient<Database> = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  );
 
   public static getInstance(): SupabaseService {
     if (!SupabaseService.instance) {
       SupabaseService.instance = new SupabaseService();
     }
     return SupabaseService.instance;
-  }
-
-  public static getClient(): SupabaseClient<Database> {
-    if (!SupabaseService.client) {
-      SupabaseService.client = createClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-      );
-    }
-    return SupabaseService.client;
   }
 
   private constructor() {
@@ -41,7 +34,8 @@ export class SupabaseService {
   }
 
   async getChargerById(id: string) {
-    const { data, error } = await SupabaseService.getClient()
+    console.log('Fetching charger by ID:', id);
+    const { data, error } = await this.client
       .from('chargers')
       .select(
         `
@@ -73,4 +67,4 @@ export class SupabaseService {
 }
 
 // Export singleton instance
-export const supabase = SupabaseService.getClient();
+export const supabase = SupabaseService.getInstance();

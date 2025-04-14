@@ -20,7 +20,7 @@ export const Auth = ({ isOpen, onClose }: AuthProps) => {
 
   const handleSocialLogin = async (provider: Provider) => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.client.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
@@ -57,12 +57,12 @@ export const Auth = ({ isOpen, onClose }: AuthProps) => {
       let result;
 
       if (mode === 'signin') {
-        result = await supabase.auth.signInWithPassword({
+        result = await supabase.client.auth.signInWithPassword({
           email,
           password,
         });
       } else if (mode === 'signup') {
-        result = await supabase.auth.signUp({
+        result = await supabase.client.auth.signUp({
           email,
           password,
           options: {
@@ -70,7 +70,7 @@ export const Auth = ({ isOpen, onClose }: AuthProps) => {
           },
         });
       } else if (mode === 'recover') {
-        result = await supabase.auth.resetPasswordForEmail(email, {
+        result = await supabase.client.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
         });
 

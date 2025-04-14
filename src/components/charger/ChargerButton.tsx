@@ -1,3 +1,5 @@
+'use client';
+
 import { useChargerStatus } from '../../hooks/useChargerStatus';
 
 interface ChargerButtonProps {

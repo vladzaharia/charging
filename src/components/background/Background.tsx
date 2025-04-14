@@ -100,7 +100,7 @@ export default function Background({ style, className, children }: BackgroundPro
 
   return (
     <div className={`relative w-full h-full ${className || ''}`} style={style}>
-      <div className={`${styles.pattern} absolute inset-0 w-full h-full`}>
+      <div className={`${styles.pattern} absolute inset-0 w-full h-full -z-10`}>
         <svg
           className={styles.svgTile}
           viewBox="0 0 1500 1500"

@@ -1,3 +1,5 @@
+'use client';
+
 import { useChargerStatus } from '../../hooks/useChargerStatus';
 import type { Connector, ConnectorStatus as ConnectorStatusType } from '../../types/charger';
 import { ConnectorStatus } from './ConnectorStatus';

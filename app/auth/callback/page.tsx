@@ -8,7 +8,7 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        const { error } = await supabase.auth.getSession();
+        const { error } = await supabase.client.auth.getSession();
         if (error) throw error;
 
         // Close the window if it was opened by OAuth
