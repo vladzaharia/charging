@@ -1,38 +1,32 @@
 {
-  "name": "polaris-charge",
+  "name": "polaris-express",
   "type": "module",
   "version": "1.0.0",
   "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
-    "clean": "rimraf dist",
-    "build": "yarn clean && astro check && astro build",
-    "astro": "astro",
-    "format": "prettier --write \"src/**/*.{js,ts,jsx,tsx,astro,css,md,mdx,json}\"",
+    "dev": "next dev",
+    "start": "next start",
+    "build": "next build",
+    "lint": "next lint",
+    "format": "prettier --write \"{src,app}/**/*.{js,ts,jsx,tsx,css,md,mdx,json}\"",
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{js,ts,jsx,tsx,astro,css,md,mdx,json}": [
+    "*.{js,ts,jsx,tsx,css,md,mdx,json}": [
       "prettier --write"
     ]
   },
   "dependencies": {
-    "@astrojs/node": "^9.1.3",
-    "@astrojs/react": "4.2.1",
-    "@astrojs/tailwind": "6.0.0",
+    "@iconify/react": "^5.2.1",
     "@playform/compress": "^0.1.7",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.49.4",
     "aos": "^3.0.0-beta.6",
-    "astro": "5.4.1",
-    "astro-compressor": "^1.0.0",
-    "astro-font": "^1.0.0",
-    "astro-icon": "^1.1.5",
-    "astro-seo": "^0.8.4",
+    "eslint-config-next": "^15.3.0",
     "nanoid": "^5.1.5",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "next": "^15.3.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.4",

@@ -11,9 +11,14 @@ node_modules/
 
 # Build output
 dist/
-.astro/
 .wrangler/
 .cloudflare/
+
+# Next.js
+.next/
+out/
+build
+.vercel
 
 # TypeScript
 *.tsbuildinfo

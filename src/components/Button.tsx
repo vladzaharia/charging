@@ -1,0 +1,41 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
+import { ButtonReact } from './button/ButtonReact';
+
+interface ButtonProps {
+  path: string;
+  className?: string;
+  label?: string;
+  disabled?: boolean;
+  children: React.ReactNode;
+}
+
+export default function Button({
+  path,
+  className,
+  label,
+  disabled = false,
+  children,
+}: ButtonProps) {
+  const pathname = usePathname();
+
+  // Check if current path matches this nav item
+  const isActive =
+    path === '' ? pathname === '/' || pathname === '' : pathname.startsWith(`/${path}`);
+
+  return (
+    <ButtonReact
+      as="a"
+      href={`/${path}`}
+      variant="primary"
+      disabled={disabled}
+      className={className}
+      data-astro-prefetch
+      aria-current={isActive ? 'page' : undefined}
+      aria-label={label || undefined}
+    >
+      {children}
+    </ButtonReact>
+  );
+}

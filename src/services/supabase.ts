@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
 export class SupabaseError extends Error {
@@ -13,21 +14,34 @@ export class SupabaseError extends Error {
 }
 
 export class SupabaseService {
-  private readonly client;
+  private static instance: SupabaseService;
+  private static client: SupabaseClient<Database>;
 
-  constructor() {
-    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-    const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+  public static getInstance(): SupabaseService {
+    if (!SupabaseService.instance) {
+      SupabaseService.instance = new SupabaseService();
+    }
+    return SupabaseService.instance;
+  }
 
-    if (!supabaseUrl || !supabaseKey) {
+  public static getClient(): SupabaseClient<Database> {
+    if (!SupabaseService.client) {
+      SupabaseService.client = createClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      );
+    }
+    return SupabaseService.client;
+  }
+
+  private constructor() {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       throw new Error('Missing required Supabase configuration');
     }
-
-    this.client = createClient<Database>(supabaseUrl, supabaseKey);
   }
 
   async getChargerById(id: string) {
-    const { data, error } = await this.client
+    const { data, error } = await SupabaseService.getClient()
       .from('chargers')
       .select(
         `
@@ -57,3 +71,6 @@ export class SupabaseService {
     return data;
   }
 }
+
+// Export singleton instance
+export const supabase = SupabaseService.getClient();

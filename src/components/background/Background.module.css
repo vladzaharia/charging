@@ -1,0 +1,51 @@
+.pattern {
+  background-color: transparent;
+}
+
+.svgTile {
+  position: absolute;
+  width: 1500px;
+  height: 1500px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Create copies of the SVG for tiling */
+.svgTile::before,
+.svgTile::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  z-index: -1;
+}
+
+/* Position the tiles */
+.svgTile::before {
+  left: -100%;
+}
+
+.svgTile::after {
+  left: 100%;
+}
+
+/* Additional tiles for vertical coverage */
+.pattern::before,
+.pattern::after {
+  content: '';
+  position: absolute;
+  width: 4500px; /* 3x the SVG width to ensure coverage */
+  height: 1500px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.pattern::before {
+  top: -100%;
+}
+
+.pattern::after {
+  top: 100%;
+}

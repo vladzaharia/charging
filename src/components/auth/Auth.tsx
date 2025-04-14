@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Modal } from '../modal/Modal';
 import { ButtonReact } from '../button/ButtonReact';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../services/supabase';
 import type { Provider } from '@supabase/supabase-js';
 
 type AuthMode = 'signin' | 'signup' | 'recover';

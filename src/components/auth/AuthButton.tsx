@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { Auth } from './Auth';
 import { ButtonReact } from '../button/ButtonReact';
