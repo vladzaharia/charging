@@ -1,7 +1,6 @@
 'use client';
 
 import useSWR from 'swr';
-import type { Charger } from '../types/charger';
 import { getChargerStatus } from '../lib/actions/charger';
 
 export const useChargerStatus = (chargerId: string) => {

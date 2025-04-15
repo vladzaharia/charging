@@ -52,11 +52,6 @@ export const viewport: Viewport = {
   initialScale: 1.0,
 };
 
-const global = {
-  title: 'Polaris Express',
-  description: 'Park and charge your car in our personal lot.',
-};
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html

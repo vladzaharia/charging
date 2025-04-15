@@ -1,6 +1,5 @@
 import Navbar from '@/components/Navbar';
 import type { Metadata } from 'next';
-import { Icon } from '@iconify/react';
 
 export const metadata: Metadata = {
   title: 'Polaris Express',

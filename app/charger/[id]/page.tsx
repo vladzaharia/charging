@@ -1,6 +1,6 @@
 import { NavbarWrapper } from '../../../src/components/NavbarWrapper';
 import { ChargerStatusWrapper } from '../../../src/components/charger/ChargerStatusWrapper';
-import type { Metadata, ResolvingMetadata } from 'next';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 type Props = {
@@ -8,10 +8,7 @@ type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-export async function generateMetadata(
-  { params }: Props,
-  parent: ResolvingMetadata
-): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `Charger ${(await params).id} - Polaris Express`,
     description: 'Park and charge your car in our personal lot.',

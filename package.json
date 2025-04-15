@@ -6,24 +6,27 @@
     "dev": "next dev --turbopack",
     "start": "next start",
     "build": "next build",
-    "lint": "next lint",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write \"{src,app}/**/*.{js,ts,jsx,tsx,css,md,mdx,json}\"",
     "prepare": "husky"
   },
   "lint-staged": {
+    "*.{js,ts,jsx,tsx}": [
+      "eslint --fix"
+    ],
     "*.{js,ts,jsx,tsx,css,md,mdx,json}": [
       "prettier --write"
     ]
   },
   "dependencies": {
-    "@awesome.me/kit-370a1eb793": "^1.0.4",
-    "@iconify/react": "^5.2.1",
+    "@awesome.me/kit-370a1eb793": "^1.0.14",
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@playform/compress": "^0.1.7",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.49.4",
     "aos": "^3.0.0-beta.6",
-    "eslint-config-next": "^15.3.0",
     "nanoid": "^5.1.5",
     "next": "^15.3.0",
     "react": "^19.1.0",
@@ -37,7 +40,13 @@
     "@types/node": "^22.13.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
     "autoprefixer": "^10.4.21",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^15.3.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.6",
     "globals": "^15.15.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",
