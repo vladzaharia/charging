@@ -1,0 +1,1 @@
+yarn secretlint --secretlintrc .secretlintrc.json "**/*.{js,ts,tsx,jsx,env,json,yml,yaml,md,mdx,txt}"
