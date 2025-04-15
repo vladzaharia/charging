@@ -34,7 +34,6 @@ export class SupabaseService {
   }
 
   async getChargerById(id: string) {
-    console.log('Fetching charger by ID:', id);
     const { data, error } = await this.client
       .from('chargers')
       .select(

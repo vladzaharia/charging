@@ -1,14 +1,30 @@
 'use client';
 
-import { useChargerStatus } from '../../hooks/useChargerStatus';
+import { use } from 'react';
+import { getChargerStatus } from '@/lib/actions/charger';
+import type { Charger } from '@/types/charger';
+import { usePolling } from '@/hooks/usePolling';
 
 interface ChargerButtonProps {
-  className?: string;
   chargerId: string;
+  className?: string;
+  chargerPromise: Promise<Charger>;
 }
 
-export const ChargerButton = ({ className = '', chargerId }: ChargerButtonProps) => {
-  const { status } = useChargerStatus(chargerId);
+export const ChargerButton = ({
+  chargerId,
+  className = '',
+  chargerPromise,
+}: ChargerButtonProps) => {
+  // Get initial data from the server
+  const initialStatus = use(chargerPromise);
+
+  // Set up polling for updates
+  const status = usePolling<Charger>(
+    initialStatus,
+    () => getChargerStatus(chargerId),
+    30000 // Poll every 30 seconds
+  );
   const hasAvailableConnector =
     status?.connection_status === 'online' &&
     (status?.connectors?.some((c) => c.status === 'Available' || c.status === 'Preparing') ??

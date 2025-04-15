@@ -31,7 +31,6 @@ export default function Button({
       variant="primary"
       disabled={disabled}
       className={className}
-      data-astro-prefetch
       aria-current={isActive ? 'page' : undefined}
       aria-label={label || undefined}
     >

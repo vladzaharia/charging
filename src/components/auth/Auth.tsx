@@ -98,7 +98,13 @@ export const Auth = ({ isOpen, onClose }: AuthProps) => {
         {/* Left Column */}
         <div className="flex flex-1 flex-col items-center justify-center p-8">
           <h1 className="text-4xl font-display text-charge-blue mb-8">
-            <img src="/wordmark.svg" alt="Wordmark" />
+            <img
+              src="/wordmark.svg"
+              alt="Wordmark"
+              className="hidden md:block"
+              height="100%"
+              width="100%"
+            />
           </h1>
           <span className="text-slate-400 mb-4">Sign in/up with...</span>
           <div className="flex flex-row gap-4 w-full">

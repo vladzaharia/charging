@@ -1,7 +1,9 @@
 'use client';
 
-import { useChargerStatus } from '../../hooks/useChargerStatus';
-import type { Connector, ConnectorStatus as ConnectorStatusType } from '../../types/charger';
+import { use } from 'react';
+import { getChargerStatus } from '@/lib/actions/charger';
+import type { Charger, Connector, ConnectorStatus as ConnectorStatusType } from '@/types/charger';
+import { usePolling } from '@/hooks/usePolling';
 import { ConnectorStatus } from './ConnectorStatus';
 import { statusColors } from '../../utils/colors';
 import type { ColorSet } from '../../utils/colors';
@@ -57,25 +59,35 @@ const getGlobalStatus = (connectors: Connector[] = [], isOnline: boolean): Color
 
 interface ChargerStatusBarProps {
   chargerId: string;
+  className?: string;
+  chargerPromise: Promise<Charger>;
 }
 
-export const ChargerStatusBar = ({ chargerId }: ChargerStatusBarProps) => {
-  const { status, error, loading } = useChargerStatus(chargerId);
+export const ChargerStatusBar = ({
+  chargerId,
+  className = '',
+  chargerPromise,
+}: ChargerStatusBarProps) => {
+  // Get initial data from the server
+  const initialStatus = use(chargerPromise);
+
+  // Set up polling for updates
+  const status = usePolling<Charger>(
+    initialStatus,
+    () => getChargerStatus(chargerId),
+    30000 // Poll every 30 seconds
+  );
 
   const globalStatus = status
     ? getGlobalStatus(status.connectors, status.connection_status === 'online')
     : statusColors.slate;
 
   return (
-    <div className="flex-none">
+    <div className={`flex-none ${className}`}>
       <div
         className={`bg-slate-900/10 border-2 rounded-xl backdrop-blur backdrop-opacity-85 drop-shadow-lg ${globalStatus.border}`}
       >
-        <div className={`container mx-auto p-4 ${error ? 'text-red-400' : 'text-white'}`}>
-          {loading && <div className="text-center">Loading charger status...</div>}
-
-          {error && <div className="text-center">Error loading charger status: {error}</div>}
-
+        <div className="container mx-auto p-4 text-white">
           {status && (
             <div className="flex flex-col md:flex-row gap-6 items-center justify-between w-full">
               {status.code && (
@@ -133,16 +145,14 @@ export const ChargerStatusBar = ({ chargerId }: ChargerStatusBarProps) => {
 
               <div className="flex-1 flex items-center justify-end gap-6">
                 {status.connection_status === 'online' &&
-                  status.connectors
-                    .slice(0, 2)
-                    .map((connector) => (
-                      <ConnectorStatus
-                        key={connector.connector_id}
-                        connector={connector}
-                        statusColor={getConnectorStatusColor(connector.status)}
-                      />
-                    ))}
-                {status.connectors.length > 2 && (
+                  status?.connectors?.map((connector: Connector) => (
+                    <ConnectorStatus
+                      key={connector.connector_id}
+                      connector={connector}
+                      statusColor={getConnectorStatusColor(connector.status)}
+                    />
+                  ))}
+                {status?.connectors?.length > 2 && (
                   <span className="text-xl">+{status.connectors.length - 2}</span>
                 )}
                 {status.connection_status === 'offline' && (

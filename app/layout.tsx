@@ -1,6 +1,23 @@
+import { JetBrains_Mono, Maven_Pro, Space_Mono } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 import ClientLayout from './client-layout';
 import './globals.css';
+
+const mavenPro = Maven_Pro({
+  subsets: ['latin'],
+  variable: '--font-maven-pro',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains-mono',
+});
+
+const spaceMono = Space_Mono({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-space-mono',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://charge.polaris.rest'),
@@ -42,7 +59,10 @@ const global = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html
+      className={`${mavenPro.variable} ${jetbrainsMono.variable} ${spaceMono.variable}`}
+      lang="en"
+    >
       <ClientLayout>{children}</ClientLayout>
     </html>
   );
