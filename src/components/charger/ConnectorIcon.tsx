@@ -99,6 +99,7 @@ export const ConnectorIcon = ({ connector, className = '' }: ConnectorIconProps)
         </svg>
       );
     case 'Paused':
+    case 'SuspendedEV':
     case 'SuspendedEVSE':
       return <FontAwesomeIcon icon={faPause} className="text-8xl" />;
   }

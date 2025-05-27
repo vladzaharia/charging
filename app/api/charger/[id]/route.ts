@@ -30,7 +30,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         return {
           connector_id: voltTimeConnector.connector_id,
           status: supabaseConnector?.connector_type
-            ? voltTimeConnector.status === 'SuspendedEVSE'
+            ? voltTimeConnector.status === 'SuspendedEVSE' ||
+              voltTimeConnector.status === 'SuspendedEV'
               ? 'Paused'
               : voltTimeConnector.status
             : 'Unregistered',

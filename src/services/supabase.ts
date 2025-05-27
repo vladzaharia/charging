@@ -63,6 +63,34 @@ export class SupabaseService {
 
     return data;
   }
+
+  async listChargers() {
+    const { data, error } = await this.client
+      .from('chargers')
+      .select(
+        `
+        id,
+        charger_id,
+        charger_uuid,
+        site_uuid,
+        site_id,
+        is_hidden,
+        connectors (
+          connector_id,
+          connector_idx,
+          connector_type
+        )
+      `
+      )
+      .eq('is_hidden', false) // Only return non-hidden chargers for list operations
+      .order('id');
+
+    if (error) {
+      throw new SupabaseError(error.message, 500, error.code);
+    }
+
+    return data || [];
+  }
 }
 
 // Export singleton instance

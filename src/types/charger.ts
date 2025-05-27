@@ -13,6 +13,7 @@ export type ConnectorStatus =
   | 'Unknown'
   | 'Unregistered'
   | 'Finishing'
+  | 'SuspendedEV'
   | 'SuspendedEVSE'
   | 'Paused';
 

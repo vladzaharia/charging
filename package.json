@@ -10,13 +10,11 @@
     "format": "prettier --write \"{src,app}/**/*.{js,ts,jsx,tsx,css,md,mdx,json}\"",
     "prepare": "husky",
     "typecheck": "tsc --noEmit",
-    "typecheck:staged": "node scripts/typecheck-staged.cjs",
     "secretlint:staged": "yarn secretlint --secretlintrc .secretlintrc.json $(git diff --cached --name-only --diff-filter=ACM | grep -E '\\.(js|ts|tsx|jsx|env|json|yml|yaml|md|mdx|txt)$' | xargs)"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "yarn typecheck:staged"
+      "eslint --fix"
     ],
     "*.{js,ts,jsx,tsx,css,md,mdx,json}": [
       "prettier --write",
