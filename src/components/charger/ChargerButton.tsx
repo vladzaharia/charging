@@ -1,7 +1,7 @@
 'use client';
 
 import { use } from 'react';
-import { getChargerStatus } from '@/lib/actions/charger';
+import { getChargerStatus } from '@/api/actions/charger';
 import type { Charger } from '@/types/charger';
 import { usePolling } from '@/hooks/usePolling';
 

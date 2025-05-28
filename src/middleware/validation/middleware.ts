@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { NextResponse } from 'next/server';
 
 /**
- * Validation middleware utilities
- * Following existing error handling patterns from SupabaseError and VoltTimeError
+ * Validation utilities and schemas
+ * Centralized validation functionality
  */
 
 /**
- * Custom validation error class following existing error patterns
+ * Custom validation error class
  */
 export class ValidationError extends Error {
   constructor(
@@ -156,7 +156,6 @@ export async function validateBody<T>(request: Request, schema: z.ZodSchema<T>):
 
 /**
  * Create a standardized validation error response
- * Following existing API error response patterns
  * @param error - ValidationError instance
  * @returns NextResponse with error details
  */
@@ -304,3 +303,116 @@ export function validateFile(
 
   return { valid: true };
 }
+
+// =============================================================================
+// VALIDATION SCHEMAS
+// =============================================================================
+
+/**
+ * Validation schemas for API endpoints
+ */
+
+// Charger ID validation - matches the custom nanoid format from database
+// Uses 8 characters from '123456789ABCDEFGHJKLMNPQRSTUVWXYZ' (no lowercase, no 0/O/I)
+export const ChargerIdSchema = z.object({
+  id: z
+    .string()
+    .min(1, 'Charger ID is required')
+    .regex(
+      /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/,
+      'Charger ID must be exactly 8 characters using valid characters (no lowercase, no 0/O/I)'
+    ),
+});
+
+// Connector type validation - matches database enum
+export const ConnectorTypeSchema = z.enum(['j1772', 'ccs1', 'nacs'], {
+  errorMap: () => ({ message: 'Connector type must be one of: j1772, ccs1, nacs' }),
+});
+
+// Permission level validation - matches database enum
+export const PermissionLevelSchema = z.enum(['viewer', 'editor', 'manager'], {
+  errorMap: () => ({ message: 'Permission level must be one of: viewer, editor, manager' }),
+});
+
+// User status validation - matches database enum
+export const UserStatusSchema = z.enum(['unverified', 'active', 'disabled'], {
+  errorMap: () => ({ message: 'User status must be one of: unverified, active, disabled' }),
+});
+
+// Phone number validation - matches database domain
+export const PhoneNumberSchema = z
+  .string()
+  .nullable()
+  .refine(
+    (value) => {
+      if (value === null) return true;
+      // Match the database regex: ^\+?[1-9]\d{1,14}$ with length <= 16
+      return /^\+?[1-9]\d{1,14}$/.test(value) && value.length <= 16;
+    },
+    {
+      message: 'Phone number must be in international format (+1234567890) with 2-16 digits',
+    }
+  );
+
+// Postal code validation - matches database domain patterns
+export const PostalCodeSchema = z
+  .string()
+  .nullable()
+  .refine(
+    (value) => {
+      if (value === null) return true;
+      if (value.length > 12) return false;
+
+      // US ZIP code: 12345 or 12345-6789
+      const usZip = /^\d{5}(-\d{4})?$/;
+      // Canadian postal code: A1A 1A1
+      const canadianPostal = /^[A-Z]\d[A-Z] \d[A-Z]\d$/;
+      // UK postal code: A1 1AA or AB1 1AA or AB12 1AA
+      const ukPostal = /^[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}$/;
+
+      return usZip.test(value) || canadianPostal.test(value) || ukPostal.test(value);
+    },
+    {
+      message: 'Postal code must be in valid format (US: 12345, Canada: A1A 1A1, UK: A1 1AA)',
+    }
+  );
+
+// Email validation with XSS protection
+export const EmailSchema = z
+  .string()
+  .min(1, 'Email is required')
+  .email('Invalid email format')
+  .max(254, 'Email must be less than 254 characters')
+  .refine(
+    (value) => {
+      // Prevent XSS in email field
+      return !/<script|javascript:|data:|vbscript:|on\w+\s*=/i.test(value);
+    },
+    {
+      message: 'Email contains invalid characters',
+    }
+  );
+
+// Name validation with XSS protection (for first_name, last_name)
+export const NameSchema = z
+  .string()
+  .min(1, 'Name is required')
+  .max(100, 'Name must be less than 100 characters')
+  .refine(
+    (value) => {
+      const trimmed = value.trim();
+      return trimmed.length > 0;
+    },
+    {
+      message: 'Name cannot be empty or only whitespace',
+    }
+  )
+  .refine(
+    (value) => {
+      // Prevent XSS - matches database validation
+      return !/<script|javascript:|data:|vbscript:|on\w+\s*=/i.test(value);
+    },
+    {
+      message: 'Name contains invalid characters',
+    }
+  );

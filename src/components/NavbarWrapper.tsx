@@ -1,7 +1,7 @@
 'use server';
 
 import { Suspense } from 'react';
-import { getChargerStatus } from '../lib/actions/charger';
+import { getChargerStatus } from '../api/actions/charger';
 import Navbar from './Navbar';
 
 interface NavbarWrapperProps {

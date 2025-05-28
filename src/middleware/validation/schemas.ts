@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 /**
  * Validation schemas for API endpoints
- * Following existing error patterns and data structures
  */
 
 // Charger ID validation - matches the custom nanoid format from database

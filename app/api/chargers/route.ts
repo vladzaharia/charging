@@ -1,10 +1,9 @@
 import { SupabaseService, SupabaseError } from '@/services/supabase';
 import { NextResponse } from 'next/server';
-import { ValidationError, createValidationErrorResponse } from '@/lib/validation';
+import { ValidationError, createValidationErrorResponse } from '@/middleware/validation/middleware';
 
 export async function GET(request: Request) {
   try {
-    // Validate query parameters (optional pagination and search)
     const url = new URL(request.url);
     const searchParams = url.searchParams;
 

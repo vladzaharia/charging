@@ -1,13 +1,12 @@
 /**
  * Rate limiting utilities for API routes
  * Implements in-memory rate limiting with LRU cache for memory efficiency
- * Following existing error patterns and integrating with middleware
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Rate limit error class following existing error patterns
+ * Rate limit error class
  */
 export class RateLimitError extends Error {
   constructor(
@@ -33,31 +32,24 @@ export interface RateLimitConfig {
  * Rate limit configurations for different endpoint types
  */
 export const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
-  // Public charger endpoints - more generous limits for guest access
   'charger-public': {
-    windowMs: 60 * 1000, // 1 minute
-    maxRequests: 60, // 60 requests per minute (1 per second)
+    windowMs: 60 * 1000,
+    maxRequests: 60,
     message: 'Too many requests to charger endpoints. Please try again later.',
   },
-
-  // General API endpoints - standard limits
   'api-general': {
-    windowMs: 60 * 1000, // 1 minute
-    maxRequests: 30, // 30 requests per minute
+    windowMs: 60 * 1000,
+    maxRequests: 30,
     message: 'Too many API requests. Please try again later.',
   },
-
-  // Future authenticated endpoints - higher limits for authenticated users
   'api-authenticated': {
-    windowMs: 60 * 1000, // 1 minute
-    maxRequests: 120, // 120 requests per minute
+    windowMs: 60 * 1000,
+    maxRequests: 120,
     message: 'Too many requests. Please try again later.',
   },
-
-  // Future admin endpoints - very restrictive
   'api-admin': {
-    windowMs: 60 * 1000, // 1 minute
-    maxRequests: 10, // 10 requests per minute
+    windowMs: 60 * 1000,
+    maxRequests: 10,
     message: 'Too many admin requests. Please try again later.',
   },
 };
@@ -240,7 +232,7 @@ function getRateLimiter(): RateLimiter {
 }
 
 /**
- * Get client IP address from request
+ * Get client IP address from request headers
  */
 export function getClientIP(request: NextRequest): string {
   // Check various headers for the real IP
@@ -261,25 +253,21 @@ export function getClientIP(request: NextRequest): string {
     return cfConnectingIP;
   }
 
-  // Fallback when no IP headers are available
   return 'unknown';
 }
 
 /**
- * Determine rate limit type based on request path and authentication
+ * Determine rate limit type based on request path and authentication status
  */
 export function getRateLimitType(pathname: string, isAuthenticated: boolean): string {
-  // Charger endpoints (public access needed for guests)
   if (pathname.startsWith('/api/charger')) {
     return 'charger-public';
   }
 
-  // Future admin endpoints
   if (pathname.startsWith('/api/admin')) {
     return 'api-admin';
   }
 
-  // Authenticated vs general API endpoints
   if (isAuthenticated) {
     return 'api-authenticated';
   }

@@ -1,7 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
-import { getChargerStatus } from '../lib/actions/charger';
+import { getChargerStatus } from '../api/actions/charger';
 
 export const useChargerStatus = (chargerId: string) => {
   const { data, error, isLoading } = useSWR(

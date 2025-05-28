@@ -1,14 +1,14 @@
+/**
+ * Authentication utilities for API routes
+ * Centralized authentication functionality
+ */
+
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Session, User } from '@supabase/supabase-js';
 
 /**
- * Authentication utilities for API routes
- * Following existing error patterns and Supabase integration
- */
-
-/**
- * Authentication error class following existing error patterns
+ * Authentication error class
  */
 export class AuthenticationError extends Error {
   constructor(

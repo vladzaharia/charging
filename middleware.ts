@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { applyRateLimit, addRateLimitHeaders } from '@/lib/rate-limit';
+import { applyRateLimit, addRateLimitHeaders } from '@/middleware/rate-limit';
 
 /**
  * Security middleware for NextJS application

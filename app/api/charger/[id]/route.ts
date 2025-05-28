@@ -3,12 +3,12 @@ import { SupabaseService, SupabaseError } from '@/services/supabase';
 import type { Connector } from '@/types/charger';
 import type { VoltTimeConnector } from '@/types/volttime';
 import { NextResponse } from 'next/server';
+import { ChargerIdSchema } from '@/middleware/validation/schemas';
 import {
-  ChargerIdSchema,
   validateParams,
   ValidationError,
   createValidationErrorResponse,
-} from '@/lib/validation';
+} from '@/middleware/validation/middleware';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
