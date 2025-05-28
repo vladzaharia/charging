@@ -208,7 +208,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to create standard user policies
-CREATE OR REPLACE FUNCTION create_standard_user_policy(
+CREATE OR REPLACE FUNCTION create_user_policy(
     table_name text,
     user_column text DEFAULT 'supabase_id'
 )
@@ -234,19 +234,19 @@ BEGIN
 
     policy_name := format('Users can view own %s', table_name);
     EXECUTE format(
-        'CREATE POLICY %L ON public.%I FOR SELECT USING ((SELECT auth.uid()) = %I)',
+        'CREATE POLICY %I ON public.%I FOR SELECT USING ((SELECT auth.uid()) = %I)',
         policy_name, table_name, user_column
     );
 
     policy_name := format('Users can insert own %s', table_name);
     EXECUTE format(
-        'CREATE POLICY %L ON public.%I FOR INSERT WITH CHECK ((SELECT auth.uid()) = %I)',
+        'CREATE POLICY %I ON public.%I FOR INSERT WITH CHECK ((SELECT auth.uid()) = %I)',
         policy_name, table_name, user_column
     );
 
     policy_name := format('Users can update own %s', table_name);
     EXECUTE format(
-        'CREATE POLICY %L ON public.%I FOR UPDATE USING ((SELECT auth.uid()) = %I) WITH CHECK ((SELECT auth.uid()) = %I)',
+        'CREATE POLICY %I ON public.%I FOR UPDATE USING ((SELECT auth.uid()) = %I) WITH CHECK ((SELECT auth.uid()) = %I)',
         policy_name, table_name, user_column, user_column
     );
 
@@ -278,7 +278,7 @@ BEGIN
 
     policy_name := format('Managers can modify %s', table_name);
     EXECUTE format(
-        'CREATE POLICY %L ON public.%I FOR ALL USING (
+        'CREATE POLICY %I ON public.%I FOR ALL USING (
             (SELECT auth.role()) = ''service_role'' OR
             has_permission((SELECT auth.uid()), %L, %I, ''manager''::permission_level)
         ) WITH CHECK (
@@ -313,13 +313,13 @@ BEGIN
     IF resource_type IS NULL THEN
         policy_name := format('All users can view %s', table_name);
         EXECUTE format(
-            'CREATE POLICY %L ON public.%I FOR SELECT USING (true)',
+            'CREATE POLICY %I ON public.%I FOR SELECT USING (true)',
             policy_name, table_name
         );
     ELSE
         policy_name := format('Viewers can view %s', table_name);
         EXECUTE format(
-            'CREATE POLICY %L ON public.%I FOR SELECT USING (
+            'CREATE POLICY %I ON public.%I FOR SELECT USING (
                 (SELECT auth.role()) = ''service_role'' OR
                 has_permission((SELECT auth.uid()), %L, %I, ''viewer''::permission_level)
             )',
@@ -333,6 +333,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Grant execute permissions on all permission functions
 GRANT EXECUTE ON FUNCTION get_user_permissions(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION create_standard_user_policy(text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION create_user_policy(text, text) TO authenticated;
 GRANT EXECUTE ON FUNCTION create_manager_policy(text, text, text) TO authenticated;
 GRANT EXECUTE ON FUNCTION create_viewer_policy(text, text, text) TO authenticated;

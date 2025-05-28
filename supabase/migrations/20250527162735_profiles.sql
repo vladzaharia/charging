@@ -31,7 +31,7 @@ CREATE TRIGGER update_profiles_updated_at
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Create standard user policies for profiles
-SELECT create_standard_user_policy('profiles', 'supabase_id');
+SELECT create_user_policy('profiles', 'supabase_id');
 CREATE OR REPLACE FUNCTION validate_profile_update()
 RETURNS TRIGGER AS $$
 BEGIN
