@@ -35,7 +35,8 @@
     "next": "^15.3.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "swr": "^2.3.3"
+    "swr": "^2.3.3",
+    "zod": "^3.25.31"
   },
   "devDependencies": {
     "@babel/parser": "^7.26.9",

@@ -8608,6 +8608,7 @@ __metadata:
     swr: "npm:^2.3.3"
     tailwindcss: "npm:^4.1.3"
     typescript: "npm:^5.8.2"
+    zod: "npm:^3.25.31"
   languageName: unknown
   linkType: soft
 
@@ -11339,6 +11340,13 @@ __metadata:
   version: 3.24.2
   resolution: "zod@npm:3.24.2"
   checksum: 10c0/c638c7220150847f13ad90635b3e7d0321b36cce36f3fc6050ed960689594c949c326dfe2c6fa87c14b126ee5d370ccdebd6efb304f41ef5557a4aaca2824565
+  languageName: node
+  linkType: hard
+
+"zod@npm:^3.25.31":
+  version: 3.25.31
+  resolution: "zod@npm:3.25.31"
+  checksum: 10c0/c519ebc5f06f42d49afa71fd4e2c838f7e7301db0aa3af1570b58518a4e6052d7f9d67dc3aab5f0f61a5e769bc58ec5c785d797f61a4a705f476d969ce68e932
   languageName: node
   linkType: hard
 
