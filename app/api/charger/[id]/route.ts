@@ -3,13 +3,17 @@ import { SupabaseService, SupabaseError } from '@/services/supabase';
 import type { Connector } from '@/types/charger';
 import type { VoltTimeConnector } from '@/types/volttime';
 import { NextResponse } from 'next/server';
+import {
+  ChargerIdSchema,
+  validateParams,
+  ValidationError,
+  createValidationErrorResponse,
+} from '@/lib/validation';
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await params;
-    if (!id) {
-      return NextResponse.json({ error: 'Charger ID is required' }, { status: 400 });
-    }
+    // Validate charger ID parameter
+    const { id } = await validateParams(params, ChargerIdSchema);
 
     // First get the charger from Supabase
     const supabaseService = SupabaseService.getInstance();
@@ -48,6 +52,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     });
   } catch (error) {
     console.error('Error fetching charger data:', error);
+
+    // Handle validation errors
+    if (error instanceof ValidationError) {
+      return createValidationErrorResponse(error);
+    }
 
     if (error instanceof VoltTimeError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

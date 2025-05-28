@@ -208,11 +208,13 @@ export const PermissionSchema = z.object({
 export const PaginationSchema = z.object({
   page: z
     .string()
+    .nullable()
     .optional()
     .transform((val) => (val ? parseInt(val, 10) : 1))
     .refine((val) => val > 0, 'Page must be a positive number'),
   limit: z
     .string()
+    .nullable()
     .optional()
     .transform((val) => (val ? parseInt(val, 10) : 10))
     .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
@@ -222,6 +224,7 @@ export const PaginationSchema = z.object({
 export const SearchQuerySchema = z.object({
   q: z
     .string()
+    .nullable()
     .optional()
     .refine(
       (value) => {
