@@ -1,5 +1,5 @@
 import Navbar from './Navbar';
-import { NavbarErrorBoundary } from './error/NavbarErrorBoundary';
+import { ErrorBoundary } from './error/ErrorBoundary';
 
 interface NavbarWrapperProps {
   chargerId?: string;
@@ -7,8 +7,8 @@ interface NavbarWrapperProps {
 
 export function NavbarWrapper({ chargerId }: NavbarWrapperProps) {
   return (
-    <NavbarErrorBoundary>
+    <ErrorBoundary context="navbar" type="general">
       <Navbar chargerId={chargerId} />
-    </NavbarErrorBoundary>
+    </ErrorBoundary>
   );
 }

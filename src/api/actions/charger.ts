@@ -4,6 +4,21 @@ import type { Charger } from '@/types/charger';
 import { HTTPError } from '@/types/errors';
 import { revalidatePath, unstable_cache } from 'next/cache';
 
+/**
+ * Server action result type for React 19 error handling patterns
+ */
+export type ServerActionResult<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      error: string;
+      code?: string;
+      status?: number;
+    };
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 /**
@@ -80,6 +95,94 @@ export const getChargerStatus = unstable_cache(
     tags: ['charger'],
   }
 );
+
+/**
+ * Modern server action with React 19 error handling patterns
+ * Returns a result object instead of throwing errors
+ */
+export async function getChargerStatusSafe(
+  chargerId: string
+): Promise<ServerActionResult<Charger>> {
+  try {
+    const charger = await fetchChargerData(chargerId);
+    return {
+      success: true,
+      data: charger,
+    };
+  } catch (error) {
+    // Handle different error types and return structured error responses
+    if (error instanceof HTTPError) {
+      return {
+        success: false,
+        error: error.message,
+        status: error.status,
+        code: error.statusText,
+      };
+    }
+
+    // Handle unexpected errors
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
+      status: 500,
+      code: 'INTERNAL_ERROR',
+    };
+  }
+}
+
+/**
+ * Server action for form submissions with error state management
+ * Compatible with useActionState hook
+ */
+export async function submitChargerAction(
+  _prevState: ServerActionResult<string> | null,
+  formData: FormData
+): Promise<ServerActionResult<string>> {
+  try {
+    const chargerId = formData.get('chargerId') as string;
+
+    if (!chargerId) {
+      return {
+        success: false,
+        error: 'Charger ID is required',
+        status: 400,
+        code: 'VALIDATION_ERROR',
+      };
+    }
+
+    // Validate charger ID format (8 characters, non-lowercase alphabet)
+    if (!/^[A-Z0-9]{8}$/.test(chargerId)) {
+      return {
+        success: false,
+        error: 'Invalid charger ID format',
+        status: 400,
+        code: 'VALIDATION_ERROR',
+      };
+    }
+
+    // Attempt to fetch charger to validate it exists
+    const result = await getChargerStatusSafe(chargerId);
+
+    if (!result.success) {
+      return result as ServerActionResult<string>;
+    }
+
+    // Simulate some action (e.g., starting charging session)
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    return {
+      success: true,
+      data: `Successfully connected to charger ${chargerId}`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
+      status: 500,
+      code: 'INTERNAL_ERROR',
+    };
+  }
+}
 
 /**
  * Trigger revalidation for a specific charger

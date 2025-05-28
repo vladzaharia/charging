@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faExclamationTriangle,
@@ -16,7 +16,7 @@ import {
 import { SupabaseError } from '@/services/supabase';
 import { VoltTimeError } from '@/services/volttime';
 import { ValidationError } from '@/middleware/validation/middleware';
-import { AuthenticationError, AuthorizationError } from '@/types/errors';
+import { AuthenticationError, AuthorizationError, ErrorUtils } from '@/types/errors';
 
 type ErrorSeverity = 'error' | 'warning' | 'info';
 
@@ -49,6 +49,15 @@ export function ErrorDisplay({
   type = 'general',
   showSignIn = false,
 }: ErrorDisplayProps) {
+  // Report error for monitoring and debugging
+  useEffect(() => {
+    ErrorUtils.reportError(error, {
+      context: context || 'unknown',
+      display_type: type,
+      component: 'ErrorDisplay',
+    });
+  }, [error, context, type]);
+
   // Helper function to create consistent error details
   const createErrorDetails = (
     icon: typeof faExclamationTriangle,
@@ -246,15 +255,21 @@ export function ErrorDisplay({
   const colorScheme = colors[severity];
 
   const handleSignIn = () => {
-    window.location.href = '/auth/signin';
+    if (typeof window !== 'undefined') {
+      window.location.href = '/auth/signin';
+    }
   };
 
   const handleGoHome = () => {
-    window.location.href = '/';
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
   };
 
   const handleGoBack = () => {
-    window.history.back();
+    if (typeof window !== 'undefined') {
+      window.history.back();
+    }
   };
 
   return (

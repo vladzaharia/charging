@@ -9,13 +9,8 @@
  * - `ErrorDisplay`: Core error display component with customizable types
  * - `ErrorPage`: Full-page error wrapper for error.tsx and not-found.tsx
  * - `ErrorInline`: Compact error display for inline use
- *
- * ## Legacy Components (Deprecated):
- *
- * - `ChargerErrorFallback`: Use ErrorDisplay with type="charger" instead
- * - `GeneralErrorFallback`: Use ErrorDisplay with type="general" instead
- * - `ChargerErrorInline`: Use ErrorInline instead
- * - `GeneralErrorInline`: Use ErrorInline instead
+ * - `ErrorBoundary`: Unified error boundary with configurable context and type
+ * - `withErrorBoundary`: Higher-order component for wrapping components with error boundary
  *
  * ## Usage Examples:
  *
@@ -34,12 +29,17 @@
  *
  * // Inline error
  * <ErrorInline error={error} retry={retry} />
+ *
+ * // Error boundary
+ * <ErrorBoundary context="charger" type="charger">
+ *   <ChargerComponent />
+ * </ErrorBoundary>
+ *
+ * // HOC wrapper
+ * const SafeComponent = withErrorBoundary(MyComponent, { context: 'general' });
  * ```
  */
 
 // Main unified components
 export { ErrorDisplay, ErrorPage, ErrorInline } from './ErrorDisplay';
-
-// Legacy components (deprecated but maintained for backward compatibility)
-export { ChargerErrorFallback, ChargerErrorInline } from './ChargerErrorFallback';
-export { GeneralErrorFallback, GeneralErrorInline } from './GeneralErrorFallback';
+export { ErrorBoundary, withErrorBoundary } from './ErrorBoundary';

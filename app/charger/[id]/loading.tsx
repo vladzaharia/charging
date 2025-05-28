@@ -1,17 +1,9 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@awesome.me/kit-370a1eb793/icons/classic/solid';
-
 export default function ChargerLoading() {
   return (
     <main className="flex flex-col p-6 h-screen">
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="max-w-md w-full p-8 rounded-xl border-2 border-charge-blue bg-slate-900/10 backdrop-blur backdrop-opacity-85 drop-shadow-lg">
           <div className="text-center space-y-6">
-            {/* Loading Icon */}
-            <div className="text-charge-blue text-3xl">
-              <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-            </div>
-
             {/* Loading Title */}
             <h1 className="text-2xl font-display font-bold text-charge-blue">Loading Charger</h1>
 

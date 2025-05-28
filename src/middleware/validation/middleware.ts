@@ -7,16 +7,50 @@ import { NextResponse } from 'next/server';
  */
 
 /**
- * Custom validation error class
+ * Enhanced validation error class with metadata support
  */
 export class ValidationError extends Error {
+  public readonly metadata: {
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    category:
+      | 'authentication'
+      | 'authorization'
+      | 'validation'
+      | 'network'
+      | 'server'
+      | 'client'
+      | 'external';
+    correlationId?: string;
+    timestamp: Date;
+    context?: Record<string, unknown>;
+    retryable: boolean;
+    userMessage: string;
+  };
+
   constructor(
     message: string,
     public status: number = 400,
-    public issues: z.ZodIssue[] = []
+    public issues: z.ZodIssue[] = [],
+    metadata: Partial<typeof ValidationError.prototype.metadata> = {}
   ) {
     super(message);
     this.name = 'ValidationError';
+
+    this.metadata = {
+      severity: 'low',
+      category: 'validation',
+      timestamp: new Date(),
+      retryable: false,
+      userMessage: this.getSimpleMessage(),
+      context: {
+        issues: issues.map((i) => ({
+          path: i.path.join('.'),
+          message: i.message,
+          code: i.code,
+        })),
+      },
+      ...metadata,
+    };
   }
 
   /**

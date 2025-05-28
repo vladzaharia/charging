@@ -1,13 +1,67 @@
 import type { VoltTimeChargerResponse } from '../types/volttime';
 
+/**
+ * Enhanced VoltTime error class with metadata support
+ */
 export class VoltTimeError extends Error {
+  public readonly metadata: {
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    category:
+      | 'authentication'
+      | 'authorization'
+      | 'validation'
+      | 'network'
+      | 'server'
+      | 'client'
+      | 'external';
+    correlationId?: string;
+    timestamp: Date;
+    context?: Record<string, unknown>;
+    retryable: boolean;
+    userMessage: string;
+  };
+
   constructor(
     message: string,
     public status: number,
-    public response?: Response
+    public response?: Response,
+    metadata: Partial<typeof VoltTimeError.prototype.metadata> = {}
   ) {
     super(message);
     this.name = 'VoltTimeError';
+
+    // Determine retryability and severity based on status code
+    const isRetryable = status >= 500 || status === 429;
+    const severity = status >= 500 ? 'high' : status === 404 ? 'low' : 'medium';
+
+    this.metadata = {
+      severity,
+      category: 'external',
+      timestamp: new Date(),
+      retryable: isRetryable,
+      userMessage: this.getDefaultUserMessage(status),
+      context: { statusCode: status, response: response?.url },
+      ...metadata,
+    };
+  }
+
+  private getDefaultUserMessage(status: number): string {
+    switch (status) {
+      case 400:
+        return 'Invalid charger request. Please check the charger ID.';
+      case 401:
+        return 'Authentication required for charger service.';
+      case 403:
+        return 'Access denied to charger service.';
+      case 404:
+        return 'Charger not found in the charging network.';
+      case 429:
+        return 'Too many charger requests. Please wait a moment.';
+      case 500:
+        return 'Charging service temporarily unavailable.';
+      default:
+        return 'Charger service error occurred. Please try again.';
+    }
   }
 }
 
