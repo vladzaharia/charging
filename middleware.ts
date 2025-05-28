@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { applyRateLimit, addRateLimitHeaders } from '@/lib/rate-limit';
 
 /**
  * Security middleware for NextJS application
@@ -46,50 +47,12 @@ function isStateChangingRequest(request: NextRequest): boolean {
 }
 
 /**
- * Add comprehensive security headers to response
+ * Add middleware-specific headers to response
+ * Note: Security headers are now handled by next.config.mjs
  */
-function addSecurityHeaders(response: NextResponse): void {
-  // Prevent clickjacking
-  response.headers.set('X-Frame-Options', 'DENY');
-
-  // Prevent MIME type sniffing
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-
-  // Control referrer information
-  response.headers.set('Referrer-Policy', 'origin-when-cross-origin');
-
-  // Enable XSS protection
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-
-  // DNS prefetch control
-  response.headers.set('X-DNS-Prefetch-Control', 'on');
-
+function addMiddlewareHeaders(response: NextResponse): void {
   // Remove powered by header (already disabled in next.config.mjs)
   response.headers.delete('X-Powered-By');
-
-  // Content Security Policy - Allow necessary resources while blocking XSS
-  const csp = [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // NextJS requires unsafe-inline and unsafe-eval
-    "style-src 'self' 'unsafe-inline' fonts.googleapis.com", // Allow Google Fonts
-    "font-src 'self' fonts.gstatic.com data:", // Allow Google Fonts and data URIs
-    "img-src 'self' data: blob: https:", // Allow images from various sources
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co", // Allow Supabase connections
-    "frame-ancestors 'none'", // Equivalent to X-Frame-Options: DENY
-    "base-uri 'self'",
-    "form-action 'self'",
-    "object-src 'none'",
-  ].join('; ');
-
-  response.headers.set('Content-Security-Policy', csp);
-
-  // HSTS for HTTPS (only in production)
-  if (process.env.NODE_ENV === 'production') {
-    response.headers.set(
-      'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains; preload'
-    );
-  }
 }
 
 /**
@@ -146,8 +109,29 @@ function createUnauthorizedResponse(): NextResponse {
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
-  // Add security headers to all responses
-  addSecurityHeaders(response);
+  // Add middleware-specific headers to all responses
+  addMiddlewareHeaders(response);
+
+  // Apply rate limiting to API routes
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    // Check if user is authenticated for rate limiting purposes
+    let isAuthenticated = false;
+    if (isProtectedApiRoute(request.nextUrl.pathname)) {
+      const session = await validateSession(request);
+      isAuthenticated = !!session;
+    }
+
+    // Apply rate limiting
+    const rateLimitResult = applyRateLimit(request, isAuthenticated);
+
+    if (!rateLimitResult.allowed) {
+      // Rate limit exceeded, return the rate limit response
+      return rateLimitResult.response!;
+    }
+
+    // Add rate limit headers to successful responses
+    addRateLimitHeaders(response, rateLimitResult.headers);
+  }
 
   // Skip auth checks for public routes
   if (isPublicRoute(request.nextUrl.pathname)) {
