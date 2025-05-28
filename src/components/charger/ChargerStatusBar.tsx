@@ -1,14 +1,12 @@
 'use client';
 
-import { use } from 'react';
-import { getChargerStatus } from '@/api/actions/charger';
-import type { Charger, Connector, ConnectorStatus as ConnectorStatusType } from '@/types/charger';
-import { usePolling } from '@/hooks/usePolling';
+import type { Connector, ConnectorStatus as ConnectorStatusType } from '@/types/charger';
 import { ConnectorStatus } from './ConnectorStatus';
 import { statusColors } from '../../utils/colors';
 import type { ColorSet } from '../../utils/colors';
 import { faQrcode } from '@awesome.me/kit-370a1eb793/icons/classic/solid';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useChargerData } from './ChargerDataProvider';
 
 const getConnectorStatusColor = (status: ConnectorStatusType): ColorSet => {
   switch (status) {
@@ -61,25 +59,12 @@ const getGlobalStatus = (connectors: Connector[] = [], isOnline: boolean): Color
 };
 
 interface ChargerStatusBarProps {
-  chargerId: string;
   className?: string;
-  chargerPromise: Promise<Charger>;
 }
 
-export const ChargerStatusBar = ({
-  chargerId,
-  className = '',
-  chargerPromise,
-}: ChargerStatusBarProps) => {
-  // Get initial data from the server
-  const initialStatus = use(chargerPromise);
-
-  // Set up polling for updates
-  const status = usePolling<Charger>(
-    initialStatus,
-    () => getChargerStatus(chargerId),
-    30000 // Poll every 30 seconds
-  );
+export const ChargerStatusBar = ({ className = '' }: ChargerStatusBarProps) => {
+  // Get shared charger data from provider
+  const { status, isPolling } = useChargerData();
 
   const globalStatus = status
     ? getGlobalStatus(status.connectors, status.connection_status === 'online')
@@ -88,9 +73,13 @@ export const ChargerStatusBar = ({
   return (
     <div className={`flex-none ${className}`}>
       <div
-        className={`bg-slate-900/10 border-2 rounded-xl backdrop-blur backdrop-opacity-85 drop-shadow-lg ${globalStatus.border}`}
+        className={`bg-slate-900/10 border-2 rounded-xl backdrop-blur backdrop-opacity-85 drop-shadow-lg ${globalStatus.border} ${isPolling ? 'animate-pulse' : ''}`}
       >
         <div className="container mx-auto p-4 text-white">
+          {/* Polling indicator */}
+          {isPolling && (
+            <div className="absolute top-2 right-2 w-2 h-2 bg-charge-blue rounded-full animate-pulse"></div>
+          )}
           {status && (
             <div className="flex flex-col md:flex-row gap-6 items-center justify-between w-full">
               {status.code && (

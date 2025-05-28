@@ -4,14 +4,12 @@ import Image from 'next/image';
 import { ChargerButton } from './charger/ChargerButton';
 import { AuthButton } from './auth/AuthButton';
 import Button from './Button';
-import type { Charger } from '../types/charger';
 
 interface NavbarProps {
   chargerId?: string;
-  chargerPromise?: Promise<Charger>;
 }
 
-export default function Navbar({ chargerId, chargerPromise }: NavbarProps) {
+export default function Navbar({ chargerId }: NavbarProps) {
   return (
     <div className="flex flex-none justify-between items-center">
       <Image
@@ -32,9 +30,7 @@ export default function Navbar({ chargerId, chargerPromise }: NavbarProps) {
       />
 
       <nav className="flex flex-row gap-4">
-        {chargerId && chargerPromise && (
-          <ChargerButton chargerId={chargerId} chargerPromise={chargerPromise} />
-        )}
+        {chargerId && <ChargerButton chargerId={chargerId} />}
         <Button path="/scan" className="text-3xl hover:text-slate-900">
           <FontAwesomeIcon icon={faQrcode} />
         </Button>

@@ -26,10 +26,10 @@ export default function Button({
 
   return (
     <ButtonReact
-      as="a"
       href={`/${path}`}
       variant="primary"
       disabled={disabled}
+      isActive={isActive}
       className={className}
       aria-current={isActive ? 'page' : undefined}
       aria-label={label || undefined}

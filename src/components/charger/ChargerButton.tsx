@@ -1,51 +1,63 @@
 'use client';
 
-import { use } from 'react';
-import { getChargerStatus } from '@/api/actions/charger';
-import type { Charger } from '@/types/charger';
-import { usePolling } from '@/hooks/usePolling';
+import { useCallback, useContext, memo } from 'react';
+import { ButtonReact } from '../button/ButtonReact';
+import { ChargerDataContext } from './ChargerDataProvider';
 
 interface ChargerButtonProps {
   chargerId: string;
   className?: string;
-  chargerPromise: Promise<Charger>;
 }
 
-export const ChargerButton = ({
-  chargerId,
-  className = '',
-  chargerPromise,
-}: ChargerButtonProps) => {
-  // Get initial data from the server
-  const initialStatus = use(chargerPromise);
+const ChargerButtonComponent = ({ chargerId, className = '' }: ChargerButtonProps) => {
+  // Check if we're within a ChargerDataProvider context
+  const context = useContext(ChargerDataContext);
 
-  // Set up polling for updates
-  const status = usePolling<Charger>(
-    initialStatus,
-    () => getChargerStatus(chargerId),
-    30000 // Poll every 30 seconds
-  );
+  // Handle button click with optimistic feedback - must be defined before early return
+  const handleBeginCharging = useCallback(() => {
+    if (!context) return;
+
+    // Optimistically update connectors to show "Preparing" state
+    const optimisticConnectors =
+      context.status?.connectors?.map((connector) =>
+        connector.status === 'Available'
+          ? { ...connector, status: 'Preparing' as const }
+          : connector
+      ) || [];
+
+    context.addOptimisticUpdate({
+      connectors: optimisticConnectors,
+    });
+
+    // Continue with navigation (the optimistic state will be corrected by polling)
+  }, [context]);
+
+  // If no context, don't render the button (used on pages without charger data)
+  if (!context) {
+    return null;
+  }
+
+  // Get shared charger data from provider
+  const { status, isPolling } = context;
+
   const hasAvailableConnector =
     status?.connection_status === 'online' &&
     (status?.connectors?.some((c) => c.status === 'Available' || c.status === 'Preparing') ??
       false);
 
-  if (!hasAvailableConnector) {
-    return null;
-  }
-
-  const baseClasses =
-    'flex flex-row items-center font-display py-4 px-6 gap-4 backdrop-blur backdrop-opacity-85 drop-shadow-lg transition-all duration-300 rounded-xl';
-  const enabledClasses =
-    'text-charge-green hover:text-slate-900 bg-slate-900/10 hover:bg-charge-green/75 border-charge-green border-2';
-
   return (
-    <a
-      className={`${baseClasses} ${enabledClasses} ${className}`}
+    <ButtonReact
       href={`/chargers/${chargerId}/begin`}
+      variant="charger"
+      show={hasAvailableConnector}
+      isLoading={isPolling}
+      onClick={handleBeginCharging}
+      className={className}
       data-astro-prefetch
     >
       Begin Charging
-    </a>
+    </ButtonReact>
   );
 };
+
+export const ChargerButton = memo(ChargerButtonComponent);

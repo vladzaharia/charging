@@ -1,23 +1,16 @@
-'use server';
-
-import { Suspense } from 'react';
-import { getChargerStatus } from '../../api/actions/charger';
 import { ChargerButton } from './ChargerButton';
 import { ChargerStatusBar } from './ChargerStatusBar';
+import { ChargerErrorBoundary } from '../error/ChargerErrorBoundary';
 
 interface ChargerStatusWrapperProps {
   chargerId: string;
 }
 
-export async function ChargerStatusWrapper({ chargerId }: ChargerStatusWrapperProps) {
-  // Fetch data on the server
-  const chargerPromise = getChargerStatus(chargerId);
-
+export function ChargerStatusWrapper({ chargerId }: ChargerStatusWrapperProps) {
   return (
-    <Suspense fallback={<div className="animate-pulse">Loading charger status...</div>}>
-      {/* Pass the promise to client components */}
-      <ChargerStatusBar chargerId={chargerId} chargerPromise={chargerPromise} />
-      <ChargerButton chargerId={chargerId} chargerPromise={chargerPromise} />
-    </Suspense>
+    <ChargerErrorBoundary>
+      <ChargerStatusBar />
+      <ChargerButton chargerId={chargerId} />
+    </ChargerErrorBoundary>
   );
 }

@@ -6,34 +6,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Session, User } from '@supabase/supabase-js';
+import { AuthenticationError, AuthorizationError } from '@/types/errors';
 
-/**
- * Authentication error class
- */
-export class AuthenticationError extends Error {
-  constructor(
-    message: string,
-    public status: number = 401,
-    public code?: string
-  ) {
-    super(message);
-    this.name = 'AuthenticationError';
-  }
-}
-
-/**
- * Authorization error class for permission-related errors
- */
-export class AuthorizationError extends Error {
-  constructor(
-    message: string,
-    public status: number = 403,
-    public code?: string
-  ) {
-    super(message);
-    this.name = 'AuthorizationError';
-  }
-}
+// Re-export error classes from shared types
+export { AuthenticationError, AuthorizationError } from '@/types/errors';
 
 /**
  * Create a Supabase server client for API routes
