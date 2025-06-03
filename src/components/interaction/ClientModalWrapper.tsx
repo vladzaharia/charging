@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, ReactNode } from 'react';
+import { getModalOverlayClasses, getModalBackdropClasses } from '../modal/modal-utils';
 
 /**
  * Client Modal Wrapper Component
@@ -13,16 +14,23 @@ import { useEffect, ReactNode } from 'react';
  *
  * // Wrap server modal layout with client interactions
  * <ClientModalWrapper isOpen={isOpen} onClose={handleClose}>
- *   <ModalLayout>
+ *   <ServerModalLayout>
  *     <AuthForm />
- *   </ModalLayout>
+ *   </ServerModalLayout>
  * </ClientModalWrapper>
  *
  * // With custom backdrop click handling
  * <ClientModalWrapper isOpen={isOpen} onClose={handleClose} enableBackdropClick={false}>
- *   <ModalLayout>
+ *   <ServerModalLayout>
  *     <CriticalForm />
- *   </ModalLayout>
+ *   </ServerModalLayout>
+ * </ClientModalWrapper>
+ *
+ * // With custom styling
+ * <ClientModalWrapper isOpen={isOpen} onClose={handleClose} className="custom-overlay">
+ *   <ServerModalLayout className="custom-content">
+ *     <CustomForm />
+ *   </ServerModalLayout>
  * </ClientModalWrapper>
  */
 
@@ -68,13 +76,14 @@ export function ClientModalWrapper({
   // Handle backdrop click
   const handleBackdropClick = enableBackdropClick ? onClose : undefined;
 
+  // Get shared styling classes
+  const overlayClasses = getModalOverlayClasses();
+  const backdropClasses = getModalBackdropClasses();
+
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center ${className}`}>
+    <div className={`${overlayClasses} ${className}`}>
       {/* Backdrop with optional click-to-close */}
-      <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur backdrop-opacity-85"
-        onClick={handleBackdropClick}
-      />
+      <div className={backdropClasses} onClick={handleBackdropClick} />
       {/* Modal content (server-rendered) */}
       {children}
     </div>

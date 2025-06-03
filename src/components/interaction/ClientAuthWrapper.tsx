@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, ReactNode } from 'react';
+import { ClientModalWrapper } from './ClientModalWrapper';
+import { ServerModalLayout } from '../modal/ServerModalLayout';
 
 /**
  * Client Auth Wrapper Component
@@ -65,17 +67,9 @@ export function ClientAuthWrapper({
 
       {/* Render modal content when open */}
       {isOpen && modalContent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur backdrop-opacity-85"
-            onClick={handleClose}
-          />
-          <div className="relative z-50 w-full max-w-4xl m-0 md:m-4">
-            <div className="bg-slate-900/10 border-slate-400/15 border-2 rounded-xl backdrop-blur backdrop-opacity-85 drop-shadow-lg overflow-hidden">
-              {modalContent}
-            </div>
-          </div>
-        </div>
+        <ClientModalWrapper isOpen={isOpen} onClose={handleClose}>
+          <ServerModalLayout>{modalContent}</ServerModalLayout>
+        </ClientModalWrapper>
       )}
     </div>
   );

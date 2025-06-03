@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
-import { Modal } from '../modal/Modal';
+import { ClientModalWrapper } from '../interaction/ClientModalWrapper';
+import { ServerModalLayout } from '../modal/ServerModalLayout';
 import { ButtonReact } from '../button/ButtonReact';
 import { supabase } from '../../services/supabase';
 import type { Provider } from '@supabase/supabase-js';
@@ -94,136 +95,138 @@ export const Auth = ({ isOpen, onClose }: AuthProps) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="flex flex-col md:items-center justify-center md:flex-row relative">
-        {/* Left Column */}
-        <div className="flex flex-1 flex-col items-center justify-center p-8">
-          <h1 className="text-4xl font-display text-charge-blue mb-8">
-            <Image
-              src="/wordmark.svg"
-              alt="Wordmark"
-              className="hidden md:block"
-              width={120}
-              height={24}
-              priority
-            />
-          </h1>
-          <span className="text-slate-400 mb-4">Sign in/up with...</span>
-          <div className="flex flex-row gap-4 w-full">
-            <ButtonReact
-              variant="orange"
-              className="flex-1"
-              onClick={() => handleSocialLogin('google')}
-              type="button"
-            >
-              Google
-            </ButtonReact>
-            <ButtonReact
-              variant="white"
-              className="flex-1"
-              onClick={() => handleSocialLogin('apple')}
-              type="button"
-            >
-              Apple
-            </ButtonReact>
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="flex items-center justify-center">
-          <hr className="m-2 border-slate-400/50 w-24 mx-6 md:mx-2 md:w-8" />
-          <span className="text-slate-400 font-display">or</span>
-          <hr className="m-2 border-slate-400/50 w-24 mx-6 md:mx-2 md:w-8" />
-        </div>
-
-        {/* Right Column */}
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 p-8 gap-6">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="font-display text-charge-blue">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-slate-900/10 border-2 border-slate-400/15 rounded-xl p-4 font-display focus:border-charge-green outline-none transition-colors"
-              required
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            {mode !== 'recover' && (
-              <>
-                <label htmlFor="password" className="font-display text-charge-blue">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-slate-900/10 border-2 border-slate-400/15 rounded-xl p-4 font-display focus:border-charge-green outline-none transition-colors"
-                  required
-                  minLength={6}
-                />
-              </>
-            )}
-          </div>
-
-          {error && <p className="text-red-500 text-sm font-display text-center">{error}</p>}
-
-          <ButtonReact type="submit" variant="primary" className="mt-4" disabled={loading}>
-            {mode === 'signin' && 'Sign In'}
-            {mode === 'signup' && 'Create Account'}
-            {mode === 'recover' && 'Send Recovery Email'}
-          </ButtonReact>
-
-          <hr className="m-2 border-slate-400/50" />
-
-          <div className="flex gap-4 mt-2">
-            {mode === 'signin' && (
-              <>
-                <ButtonReact
-                  type="button"
-                  variant="secondary"
-                  className="flex-1 text-sm p-2"
-                  onClick={() => {
-                    setMode('signup');
-                    setError(undefined);
-                  }}
-                >
-                  Sign Up
-                </ButtonReact>
-                <ButtonReact
-                  type="button"
-                  variant="secondary"
-                  className="flex-1 text-sm p-2"
-                  onClick={() => {
-                    setMode('recover');
-                    setError(undefined);
-                  }}
-                >
-                  Recover
-                </ButtonReact>
-              </>
-            )}
-            {mode !== 'signin' && (
+    <ClientModalWrapper isOpen={isOpen} onClose={onClose}>
+      <ServerModalLayout>
+        <div className="flex flex-col md:items-center justify-center md:flex-row relative">
+          {/* Left Column */}
+          <div className="flex flex-1 flex-col items-center justify-center p-8">
+            <h1 className="text-4xl font-display text-charge-blue mb-8">
+              <Image
+                src="/wordmark.svg"
+                alt="Wordmark"
+                className="hidden md:block"
+                width={120}
+                height={24}
+                priority
+              />
+            </h1>
+            <span className="text-slate-400 mb-4">Sign in/up with...</span>
+            <div className="flex flex-row gap-4 w-full">
               <ButtonReact
+                variant="orange"
+                className="flex-1"
+                onClick={() => handleSocialLogin('google')}
                 type="button"
-                variant="secondary"
-                className="flex-1 text-sm p-2"
-                onClick={() => {
-                  setMode('signin');
-                  setError(undefined);
-                }}
               >
-                Back to Sign In
+                Google
               </ButtonReact>
-            )}
+              <ButtonReact
+                variant="white"
+                className="flex-1"
+                onClick={() => handleSocialLogin('apple')}
+                type="button"
+              >
+                Apple
+              </ButtonReact>
+            </div>
           </div>
-        </form>
-      </div>
-    </Modal>
+
+          {/* Divider */}
+          <div className="flex items-center justify-center">
+            <hr className="m-2 border-slate-400/50 w-24 mx-6 md:mx-2 md:w-8" />
+            <span className="text-slate-400 font-display">or</span>
+            <hr className="m-2 border-slate-400/50 w-24 mx-6 md:mx-2 md:w-8" />
+          </div>
+
+          {/* Right Column */}
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 p-8 gap-6">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="email" className="font-display text-charge-blue">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-slate-900/10 border-2 border-slate-400/15 rounded-xl p-4 font-display focus:border-charge-green outline-none transition-colors"
+                required
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {mode !== 'recover' && (
+                <>
+                  <label htmlFor="password" className="font-display text-charge-blue">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-slate-900/10 border-2 border-slate-400/15 rounded-xl p-4 font-display focus:border-charge-green outline-none transition-colors"
+                    required
+                    minLength={6}
+                  />
+                </>
+              )}
+            </div>
+
+            {error && <p className="text-red-500 text-sm font-display text-center">{error}</p>}
+
+            <ButtonReact type="submit" variant="primary" className="mt-4" disabled={loading}>
+              {mode === 'signin' && 'Sign In'}
+              {mode === 'signup' && 'Create Account'}
+              {mode === 'recover' && 'Send Recovery Email'}
+            </ButtonReact>
+
+            <hr className="m-2 border-slate-400/50" />
+
+            <div className="flex gap-4 mt-2">
+              {mode === 'signin' && (
+                <>
+                  <ButtonReact
+                    type="button"
+                    variant="secondary"
+                    className="flex-1 text-sm p-2"
+                    onClick={() => {
+                      setMode('signup');
+                      setError(undefined);
+                    }}
+                  >
+                    Sign Up
+                  </ButtonReact>
+                  <ButtonReact
+                    type="button"
+                    variant="secondary"
+                    className="flex-1 text-sm p-2"
+                    onClick={() => {
+                      setMode('recover');
+                      setError(undefined);
+                    }}
+                  >
+                    Recover
+                  </ButtonReact>
+                </>
+              )}
+              {mode !== 'signin' && (
+                <ButtonReact
+                  type="button"
+                  variant="secondary"
+                  className="flex-1 text-sm p-2"
+                  onClick={() => {
+                    setMode('signin');
+                    setError(undefined);
+                  }}
+                >
+                  Back to Sign In
+                </ButtonReact>
+              )}
+            </div>
+          </form>
+        </div>
+      </ServerModalLayout>
+    </ClientModalWrapper>
   );
 };
