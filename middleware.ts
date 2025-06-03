@@ -50,9 +50,12 @@ function isStateChangingRequest(request: NextRequest): boolean {
  * Add middleware-specific headers to response
  * Note: Security headers are now handled by next.config.mjs
  */
-function addMiddlewareHeaders(response: NextResponse): void {
+function addMiddlewareHeaders(response: NextResponse, request: NextRequest): void {
   // Remove powered by header (already disabled in next.config.mjs)
   response.headers.delete('X-Powered-By');
+
+  // Add pathname header for server components to detect active navigation state
+  response.headers.set('x-pathname', request.nextUrl.pathname);
 }
 
 /**
@@ -110,7 +113,7 @@ export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
   // Add middleware-specific headers to all responses
-  addMiddlewareHeaders(response);
+  addMiddlewareHeaders(response, request);
 
   // Apply rate limiting to API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {

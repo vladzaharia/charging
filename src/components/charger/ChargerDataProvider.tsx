@@ -5,7 +5,7 @@ import { getChargerStatus } from '@/api/actions/charger';
 import type { Charger } from '@/types/charger';
 import { usePolling } from '@/hooks/usePolling';
 
-interface ChargerDataContextType {
+export interface ChargerDataContextType {
   status: Charger | null;
   isPolling: boolean;
   addOptimisticUpdate: (update: Partial<Charger>) => void;
