@@ -27,11 +27,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 async function fetchChargerData(chargerId: string): Promise<Charger> {
   const url = new URL(`/api/charger/${chargerId}`, API_URL);
 
-  // Add cache debugging in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`Fetching charger ${chargerId} with cache strategy`);
-  }
-
   const response = await fetch(url, {
     cache: 'force-cache', // Explicit caching for Next.js 15 compatibility
     next: {

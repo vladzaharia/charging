@@ -1,29 +1,29 @@
 CREATE TABLE IF NOT EXISTS public.chargers (
     id char(8) PRIMARY KEY DEFAULT nanoid(8, '123456789ABCDEFGHJKLMNPQRSTUVWXYZ'),
-    charger_uuid uuid NOT NULL UNIQUE,
-    charger_id integer NOT NULL UNIQUE,
-    site_uuid uuid NOT NULL,
-    site_id integer NOT NULL,
+    charge_box_id text NOT NULL UNIQUE,
+    charge_box_pk integer,
+    name text,
+    location text,
     is_hidden boolean NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
 -- Essential indexes for chargers table
-CREATE INDEX IF NOT EXISTS idx_chargers_site_uuid ON public.chargers(site_uuid);
-CREATE INDEX IF NOT EXISTS idx_chargers_site_uuid_hidden ON public.chargers(site_uuid, is_hidden);
+CREATE INDEX IF NOT EXISTS idx_chargers_charge_box_id ON public.chargers(charge_box_id);
+CREATE INDEX IF NOT EXISTS idx_chargers_charge_box_id_hidden ON public.chargers(charge_box_id, is_hidden);
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints
-                   WHERE constraint_name = 'check_chargers_charger_id_positive'
+                   WHERE constraint_name = 'check_chargers_charge_box_id_not_empty'
                    AND table_name = 'chargers') THEN
-        ALTER TABLE public.chargers ADD CONSTRAINT check_chargers_charger_id_positive CHECK (charger_id > 0);
+        ALTER TABLE public.chargers ADD CONSTRAINT check_chargers_charge_box_id_not_empty CHECK (length(trim(charge_box_id)) > 0);
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints
-                   WHERE constraint_name = 'check_chargers_site_id_positive'
+                   WHERE constraint_name = 'check_chargers_charge_box_pk_positive'
                    AND table_name = 'chargers') THEN
-        ALTER TABLE public.chargers ADD CONSTRAINT check_chargers_site_id_positive CHECK (site_id > 0);
+        ALTER TABLE public.chargers ADD CONSTRAINT check_chargers_charge_box_pk_positive CHECK (charge_box_pk IS NULL OR charge_box_pk > 0);
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints

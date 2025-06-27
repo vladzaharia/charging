@@ -4,18 +4,23 @@ export interface ChargerModel {
   name: string;
 }
 
+// OCPP 1.6 Connector Status Enumeration
 export type ConnectorStatus =
-  | 'Available'
-  | 'Preparing'
-  | 'Charging'
-  | 'Faulted'
-  | 'Unavailable'
-  | 'Unknown'
-  | 'Unregistered'
-  | 'Finishing'
-  | 'SuspendedEV'
-  | 'SuspendedEVSE'
-  | 'Paused';
+  // Operational states
+  | 'Available' // Ready for use
+  | 'Preparing' // Getting ready to charge
+  | 'Charging' // Actively charging
+  | 'SuspendedEVSE' // Suspended by charging station
+  | 'SuspendedEV' // Suspended by electric vehicle
+  | 'Finishing' // Completing charging session
+  | 'Reserved' // Reserved for specific user
+  // Non-operational states
+  | 'Unavailable' // Not available for use
+  | 'Faulted' // Error state
+  // Legacy/custom states (for backward compatibility)
+  | 'Unknown' // Status unknown
+  | 'Unregistered' // Not registered in system
+  | 'Paused'; // Legacy alias for SuspendedEVSE/SuspendedEV
 
 export interface Connector {
   connector_id: number;

@@ -93,11 +93,14 @@ export class SupabaseService {
       .select(
         `
         id,
-        charger_id,
+        charge_box_id,
+        charge_box_pk,
+        name,
+        location,
         connectors (
-          connector_id,
           connector_idx,
-          connector_type
+          connector_type,
+          max_amperage
         )
       `
       )
@@ -124,15 +127,15 @@ export class SupabaseService {
       .select(
         `
         id,
-        charger_id,
-        charger_uuid,
-        site_uuid,
-        site_id,
+        charge_box_id,
+        charge_box_pk,
+        name,
+        location,
         is_hidden,
         connectors (
-          connector_id,
           connector_idx,
-          connector_type
+          connector_type,
+          max_amperage
         )
       `
       )

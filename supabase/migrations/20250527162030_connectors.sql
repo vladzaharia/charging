@@ -1,13 +1,12 @@
 CREATE TABLE IF NOT EXISTS public.connectors (
     id char(16) PRIMARY KEY DEFAULT nanoid(16, '123456789ABCDEFGHJKLMNPQRSTUVWXYZ'),
     charger_id char(8) NOT NULL REFERENCES public.chargers(id) ON DELETE CASCADE,
-    connector_id integer NOT NULL,
     connector_idx integer NOT NULL,
     connector_type connector_type NOT NULL,
+    max_amperage integer DEFAULT 32,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    UNIQUE(charger_id, connector_idx),
-    UNIQUE(charger_id, connector_id)
+    UNIQUE(charger_id, connector_idx)
 );
 
 -- Essential indexes for connectors table
@@ -22,9 +21,9 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints
-                   WHERE constraint_name = 'check_connectors_connector_id_positive'
+                   WHERE constraint_name = 'check_connectors_max_amperage_positive'
                    AND table_name = 'connectors') THEN
-        ALTER TABLE public.connectors ADD CONSTRAINT check_connectors_connector_id_positive CHECK (connector_id > 0);
+        ALTER TABLE public.connectors ADD CONSTRAINT check_connectors_max_amperage_positive CHECK (max_amperage IS NULL OR max_amperage > 0);
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints

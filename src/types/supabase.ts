@@ -37,18 +37,18 @@ type TableUpdate<T> = Partial<Omit<T, 'id' | keyof Timestamps>>;
 
 // Table schemas with computed Insert/Update types
 type ChargerRow = Entity<{
-  charger_uuid: string;
-  charger_id: number;
-  site_uuid: string;
-  site_id: number;
+  charge_box_id: string;
+  charge_box_pk: number | null;
+  name: string | null;
+  location: string | null;
   is_hidden: boolean;
 }>;
 
 type ConnectorRow = Entity<{
   charger_id: string;
-  connector_id: number;
   connector_idx: number;
   connector_type: ConnectorType;
+  max_amperage: number | null;
 }>;
 
 type ProfileRow = Entity<{

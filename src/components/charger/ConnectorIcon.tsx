@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGear, faPause, faPlug } from '@awesome.me/kit-370a1eb793/icons/classic/solid';
+import { faGear, faPause, faPlug, faLock } from '@awesome.me/kit-370a1eb793/icons/classic/solid';
 import type { Connector } from '../../types/charger';
 import { faJ1772, faCcs1, faNacs } from '@awesome.me/kit-370a1eb793/icons/kit/custom';
 
@@ -102,6 +102,8 @@ export const ConnectorIcon = ({ connector, className = '' }: ConnectorIconProps)
     case 'SuspendedEV':
     case 'SuspendedEVSE':
       return <FontAwesomeIcon icon={faPause} className="text-8xl" />;
+    case 'Reserved':
+      return <FontAwesomeIcon icon={faLock} className="text-8xl" />;
   }
 
   switch (connector.type) {

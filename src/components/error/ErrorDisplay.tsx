@@ -14,7 +14,7 @@ import {
   faClock,
 } from '@awesome.me/kit-370a1eb793/icons/classic/solid';
 import { SupabaseError } from '@/services/supabase';
-import { VoltTimeError } from '@/services/volttime';
+import { SteVeError } from '@/services/steve';
 import { ValidationError } from '@/middleware/validation/middleware';
 import { AuthenticationError, AuthorizationError, ErrorUtils } from '@/types/errors';
 
@@ -79,7 +79,7 @@ export function ErrorDisplay({
 
   const getErrorDetails = (): ErrorDetails => {
     // Handle specific error types first
-    if (error instanceof VoltTimeError) {
+    if (error instanceof SteVeError) {
       return createErrorDetails(
         faWifi,
         'Charger Connection Error',

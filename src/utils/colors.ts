@@ -30,6 +30,11 @@ export const statusColors = {
     bg: 'bg-charge-blue',
     fill: 'fill-charge-blue',
   },
+  purple: {
+    border: 'border-purple-400',
+    bg: 'bg-purple-400',
+    fill: 'fill-purple-400',
+  },
 } as const;
 
 export type StatusColorKey = keyof typeof statusColors;

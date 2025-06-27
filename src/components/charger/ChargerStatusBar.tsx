@@ -10,18 +10,37 @@ import { useChargerData } from './ChargerDataProvider';
 
 const getConnectorStatusColor = (status: ConnectorStatusType): ColorSet => {
   switch (status) {
+    // Operational states - ready for use
     case 'Available':
       return statusColors.green;
+
+    // Operational states - in transition
     case 'Preparing':
     case 'Finishing':
-    case 'Paused':
+      return statusColors.yellow;
+
+    // Operational states - suspended/paused
     case 'SuspendedEV':
     case 'SuspendedEVSE':
+    case 'Paused': // Legacy alias
       return statusColors.yellow;
+
+    // Operational states - reserved
+    case 'Reserved':
+      return statusColors.purple;
+
+    // Active charging
     case 'Charging':
       return statusColors.blue;
+
+    // Error states
     case 'Faulted':
+    case 'Unavailable':
       return statusColors.red;
+
+    // Unknown/unregistered states
+    case 'Unknown':
+    case 'Unregistered':
     default:
       return statusColors.slate;
   }
@@ -40,18 +59,28 @@ const getGlobalStatus = (connectors: Connector[] = [], isOnline: boolean): Color
     return statusColors.red;
   }
 
-  // If any connector is charging
+  // If any connector is charging (highest priority)
   if (statuses.has('Charging')) {
     return statusColors.blue;
   }
 
-  // If any connector is available
+  // If any connector is available (second priority)
   if (statuses.has('Available')) {
     return statusColors.green;
   }
 
-  // If all connectors are preparing
-  if (statuses.has('Preparing')) {
+  // If any connector is reserved (third priority)
+  if (statuses.has('Reserved')) {
+    return statusColors.purple;
+  }
+
+  // If any connector is in transition (preparing/finishing)
+  if (statuses.has('Preparing') || statuses.has('Finishing')) {
+    return statusColors.yellow;
+  }
+
+  // If any connector is suspended/paused
+  if (statuses.has('SuspendedEV') || statuses.has('SuspendedEVSE') || statuses.has('Paused')) {
     return statusColors.yellow;
   }
 

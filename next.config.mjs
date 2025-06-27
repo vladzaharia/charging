@@ -54,7 +54,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' fonts.googleapis.com", // Allow Google Fonts and inline styles
               "font-src 'self' fonts.gstatic.com data:", // Allow Google Fonts and data URIs
               "img-src 'self' data: blob: https:", // Allow images from various sources
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cloud.volttime.com https://accounts.google.com https://appleid.apple.com", // Allow API connections
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ocpp.polaris.express https://accounts.google.com https://appleid.apple.com", // Allow API connections
               "frame-src 'self' https://accounts.google.com https://appleid.apple.com", // Allow OAuth frames
               "frame-ancestors 'none'", // Equivalent to X-Frame-Options: DENY
               "base-uri 'self'",

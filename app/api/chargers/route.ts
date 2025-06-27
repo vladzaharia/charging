@@ -47,7 +47,9 @@ export async function GET(request: Request) {
       const query = search.q.toLowerCase();
       filteredChargers = chargers.filter(
         (charger) =>
-          charger.id.toLowerCase().includes(query) || charger.charger_id.toString().includes(query)
+          charger.id.toLowerCase().includes(query) ||
+          charger.charge_box_id?.toLowerCase().includes(query) ||
+          charger.name?.toLowerCase().includes(query)
       );
     }
 
