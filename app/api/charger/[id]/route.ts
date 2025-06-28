@@ -77,6 +77,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
           status,
           max_amperage: supabaseConnector?.max_amperage || 32,
           type: supabaseConnector?.connector_type ?? 'j1772',
+          error_code: steveConnector.errorCode || 'NoError',
         };
       }
     );
@@ -114,16 +115,84 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return 'offline';
     };
 
+    // Get active transactions for this charger from database
+    const { data: activeTransactions } = await supabaseService.client
+      .from('transactions')
+      .select(
+        `
+        id,
+        start_timestamp,
+        start_meter_value,
+        energy_consumed_wh,
+        duration_minutes,
+        connector_id,
+        ocpp_tags!inner(id_tag, steve_tag_pk)
+      `
+      )
+      .eq('charger_id', charger.id)
+      .eq('is_active', true);
+
+    // Determine current user and session info
+    const currentUser =
+      activeTransactions && activeTransactions.length > 0
+        ? {
+            id_tag: (
+              activeTransactions[0] as unknown as {
+                ocpp_tags: { id_tag: string; steve_tag_pk: number };
+              }
+            ).ocpp_tags.id_tag,
+            steve_tag_pk: (
+              activeTransactions[0] as unknown as {
+                ocpp_tags: { id_tag: string; steve_tag_pk: number };
+              }
+            ).ocpp_tags.steve_tag_pk,
+          }
+        : null;
+
+    const sessionStartTime =
+      activeTransactions && activeTransactions.length > 0
+        ? activeTransactions[0].start_timestamp
+        : null;
+
     return NextResponse.json({
-      code: charger.id,
-      reference: chargePoint.description,
-      connection_status: getConnectionStatus(),
-      status: chargePoint.registrationStatus === 'Accepted' ? 'Available' : 'Unavailable',
-      model: {
-        vendor: 'Unknown',
-        name: chargePoint.description || 'Unknown',
+      // Core charger information
+      charger: {
+        id: charger.id,
+        name: charger.name,
+        location: charger.location,
+        charge_box_id: charger.charge_box_id,
       },
+      // OCPP and connection details
+      ocpp: {
+        protocol: chargePoint.ocppProtocol || null,
+        registration_status: chargePoint.registrationStatus,
+        connection_status: getConnectionStatus(),
+        last_heartbeat: chargePoint.lastHeartbeat || null,
+      },
+      // Physical charger details
+      hardware: {
+        vendor: 'Unknown',
+        model: chargePoint.description || 'Unknown',
+        reference: chargePoint.description,
+      },
+      // Location information
+      location: {
+        latitude: chargePoint.locationLatitude || null,
+        longitude: chargePoint.locationLongitude || null,
+      },
+      // Connector information
       connectors: enhancedConnectors,
+      // Active session information
+      session: {
+        is_active: (activeTransactions || []).length > 0,
+        active_transactions: activeTransactions || [],
+        current_user: currentUser,
+        session_start_time: sessionStartTime,
+        total_active_sessions: (activeTransactions || []).length,
+      },
+      // Legacy fields for backward compatibility
+      code: charger.id,
+      status: chargePoint.registrationStatus === 'Accepted' ? 'Available' : 'Unavailable',
     });
   } catch (error) {
     console.error('Error fetching charger data:', error);

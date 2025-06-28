@@ -46,6 +46,8 @@ export class SteVeService {
    */
   async authenticate(): Promise<void> {
     await this.webClient.authenticate();
+    // REST client now inherits from base client and shares session
+    await this.restClient.authenticate();
   }
 
   /**
@@ -61,6 +63,7 @@ export class SteVeService {
    */
   async logout(): Promise<void> {
     await this.webClient.logout();
+    await this.restClient.logout();
   }
 
   // Charge Point Management

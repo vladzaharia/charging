@@ -148,6 +148,98 @@ export class SupabaseService {
 
     return data || [];
   }
+
+  async getOcppTags() {
+    const { data, error } = await this.client.from('ocpp_tags').select('*').order('id_tag');
+
+    if (error) {
+      throw new SupabaseError(error.message, 500, error.code);
+    }
+
+    return data || [];
+  }
+
+  async getOcppTagByStevePk(stevePk: number) {
+    const { data, error } = await this.client
+      .from('ocpp_tags')
+      .select('*')
+      .eq('steve_tag_pk', stevePk)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // Not found
+      }
+      throw new SupabaseError(error.message, 500, error.code);
+    }
+
+    return data;
+  }
+
+  async getTransactions() {
+    const { data, error } = await this.client
+      .from('transactions')
+      .select(
+        `
+        *,
+        chargers!inner(*),
+        connectors!inner(*),
+        ocpp_tags!inner(*)
+      `
+      )
+      .order('start_timestamp', { ascending: false });
+
+    if (error) {
+      throw new SupabaseError(error.message, 500, error.code);
+    }
+
+    return data || [];
+  }
+
+  async getTransactionById(id: string) {
+    const { data, error } = await this.client
+      .from('transactions')
+      .select(
+        `
+        *,
+        chargers!inner(*),
+        connectors!inner(*),
+        ocpp_tags!inner(*)
+      `
+      )
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // Not found
+      }
+      throw new SupabaseError(error.message, 500, error.code);
+    }
+
+    return data;
+  }
+
+  async getTransactionsByOcppTag(tagId: string) {
+    const { data, error } = await this.client
+      .from('transactions')
+      .select(
+        `
+        *,
+        chargers!inner(*),
+        connectors!inner(*),
+        ocpp_tags!inner(*)
+      `
+      )
+      .eq('ocpp_tag_id', tagId)
+      .order('start_timestamp', { ascending: false });
+
+    if (error) {
+      throw new SupabaseError(error.message, 500, error.code);
+    }
+
+    return data || [];
+  }
 }
 
 // Export singleton instance

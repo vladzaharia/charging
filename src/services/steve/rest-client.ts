@@ -3,6 +3,7 @@
  * Handles official REST endpoints for OCPP tags and transactions
  */
 
+import { SteVeBaseClient } from './base-client';
 import type {
   SteVeConfig,
   OcppTag,
@@ -13,31 +14,37 @@ import type {
 } from './types';
 import { SteVeError } from './types';
 
-export class SteVeRestClient {
+export class SteVeRestClient extends SteVeBaseClient {
   private readonly baseUrl: string;
   private readonly authKey?: string;
 
   constructor(config: SteVeConfig) {
+    super(config);
     this.baseUrl = `${config.serverUrl}/steve/api/v1`;
     this.authKey = config.authKey;
   }
 
   /**
-   * Make authenticated REST API request
+   * Make authenticated REST API request using session cookies
    */
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    // Ensure we have an authenticated session
+    await this.ensureAuthenticated();
+
     const url = `${this.baseUrl}${endpoint}`;
+    const cookies = await this.cookieJar.getCookieString(url);
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
       'User-Agent': 'SteVe-Client/1.0',
+      ...(cookies && { Cookie: cookies }),
       ...(options.headers as Record<string, string>),
     };
 
-    // Add API key if available
+    // Add API key if available (some endpoints might still need it)
     if (this.authKey) {
-      headers['Authorization'] = `Bearer ${this.authKey}`;
+      headers['X-API-KEY'] = this.authKey;
     }
 
     try {
@@ -45,6 +52,12 @@ export class SteVeRestClient {
         ...options,
         headers,
       });
+
+      // Store cookies from response
+      const setCookieHeaders = response.headers.getSetCookie?.() || [];
+      for (const cookie of setCookieHeaders) {
+        await this.cookieJar.setCookie(cookie, url);
+      }
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => 'Unknown error');

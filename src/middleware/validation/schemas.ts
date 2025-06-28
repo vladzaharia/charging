@@ -237,6 +237,158 @@ export const SearchQuerySchema = z.object({
     ),
 });
 
+// OCPP Tag validation schema
+export const OcppTagIdSchema = z.object({
+  id: z
+    .string()
+    .min(1, 'OCPP Tag ID is required')
+    .transform((val) => parseInt(val, 10))
+    .refine((val) => !isNaN(val) && val > 0, 'OCPP Tag ID must be a positive integer'),
+});
+
+// OCPP Tag query parameters
+export const OcppTagQuerySchema = z.object({
+  page: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 1))
+    .refine((val) => val > 0, 'Page must be a positive number'),
+  limit: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 10))
+    .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
+  q: z
+    .string()
+    .nullable()
+    .optional()
+    .refine(
+      (value) => {
+        if (!value) return true;
+        // Prevent XSS in search queries
+        return !/<script|javascript:|data:|vbscript:|on\w+\s*=/i.test(value);
+      },
+      {
+        message: 'Search query contains invalid characters',
+      }
+    ),
+  parent_only: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => (val === 'true' ? true : val === 'false' ? false : undefined))
+    .refine(
+      (val) => val === undefined || typeof val === 'boolean',
+      'parent_only must be true or false'
+    ),
+  in_transaction: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => (val === 'true' ? true : val === 'false' ? false : undefined))
+    .refine(
+      (val) => val === undefined || typeof val === 'boolean',
+      'in_transaction must be true or false'
+    ),
+  flat: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => (val === 'true' ? true : val === 'false' ? false : undefined))
+    .refine((val) => val === undefined || typeof val === 'boolean', 'flat must be true or false'),
+});
+
+// Transaction ID validation schema
+export const TransactionIdSchema = z.object({
+  id: z
+    .string()
+    .min(1, 'Transaction ID is required')
+    .transform((val) => parseInt(val, 10))
+    .refine((val) => !isNaN(val) && val > 0, 'Transaction ID must be a positive integer'),
+});
+
+// Transaction query parameters
+export const TransactionQuerySchema = z.object({
+  page: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 1))
+    .refine((val) => val > 0, 'Page must be a positive number'),
+  limit: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 10))
+    .refine((val) => val > 0 && val <= 100, 'Limit must be between 1 and 100'),
+  charger_id: z
+    .string()
+    .nullable()
+    .optional()
+    .refine(
+      (value) => {
+        if (!value) return true;
+        // Validate charger ID format (8 characters, non-lowercase alphabet)
+        return /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/.test(value);
+      },
+      {
+        message:
+          'Charger ID must be exactly 8 characters using valid characters (no lowercase, no 0/O/I)',
+      }
+    ),
+  tag_id: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : undefined))
+    .refine(
+      (val) => val === undefined || (!isNaN(val) && val > 0),
+      'Tag ID must be a positive integer'
+    ),
+  status: z
+    .enum(['active', 'completed', 'all'], {
+      errorMap: () => ({ message: 'Status must be one of: active, completed, all' }),
+    })
+    .nullable()
+    .optional(),
+  period: z
+    .enum(['last_7', 'last_30', 'all'], {
+      errorMap: () => ({ message: 'Period must be one of: last_7, last_30, all' }),
+    })
+    .nullable()
+    .optional(),
+  start_date: z
+    .string()
+    .nullable()
+    .optional()
+    .refine(
+      (value) => {
+        if (!value) return true;
+        const date = new Date(value);
+        return !isNaN(date.getTime());
+      },
+      {
+        message: 'Start date must be a valid ISO date string',
+      }
+    ),
+  end_date: z
+    .string()
+    .nullable()
+    .optional()
+    .refine(
+      (value) => {
+        if (!value) return true;
+        const date = new Date(value);
+        return !isNaN(date.getTime());
+      },
+      {
+        message: 'End date must be a valid ISO date string',
+      }
+    ),
+});
+
 // Export type inference helpers
 export type ChargerIdInput = z.infer<typeof ChargerIdSchema>;
 export type ProfileInput = z.infer<typeof ProfileSchema>;
@@ -245,3 +397,7 @@ export type ConnectorInput = z.infer<typeof ConnectorSchema>;
 export type PermissionInput = z.infer<typeof PermissionSchema>;
 export type PaginationInput = z.infer<typeof PaginationSchema>;
 export type SearchQueryInput = z.infer<typeof SearchQuerySchema>;
+export type OcppTagIdInput = z.infer<typeof OcppTagIdSchema>;
+export type OcppTagQueryInput = z.infer<typeof OcppTagQuerySchema>;
+export type TransactionIdInput = z.infer<typeof TransactionIdSchema>;
+export type TransactionQueryInput = z.infer<typeof TransactionQuerySchema>;
