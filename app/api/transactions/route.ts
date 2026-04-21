@@ -3,6 +3,27 @@ import { supabase } from '@/services/supabase';
 import { NextResponse } from 'next/server';
 import { ValidationError, createValidationErrorResponse } from '@/middleware/validation/middleware';
 
+/**
+ * Validate transaction creation request
+ */
+function validateTransactionRequest(body: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+
+  if (!body.charger_id && !body.charge_box_id) {
+    errors.push('Either charger_id or charge_box_id is required');
+  }
+
+  if (!body.connector_id || typeof body.connector_id !== 'number' || body.connector_id < 1) {
+    errors.push('connector_id must be a positive number');
+  }
+
+  if (!body.tag_id || typeof body.tag_id !== 'string') {
+    errors.push('tag_id is required and must be a string');
+  }
+
+  return errors;
+}
+
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
@@ -200,6 +221,164 @@ export async function GET(request: Request) {
     console.error('Error fetching transactions:', error);
 
     // Handle validation errors
+    if (error instanceof ValidationError) {
+      return createValidationErrorResponse(error);
+    }
+
+    if (error instanceof SteVeError) {
+      return NextResponse.json({ error: error.message }, { status: error.statusCode || 500 });
+    }
+
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+/**
+ * POST /api/transactions
+ * Create a new transaction via RemoteStartTransaction
+ */
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+
+    // Validate request
+    const validationErrors = validateTransactionRequest(body);
+    if (validationErrors.length > 0) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationErrors },
+        { status: 400 }
+      );
+    }
+
+    // Get charger information
+    let charger;
+    if (body.charger_id) {
+      const { data } = await supabase.client
+        .from('chargers')
+        .select('id, name, charge_box_id')
+        .eq('id', body.charger_id)
+        .single();
+      charger = data;
+    } else {
+      const { data } = await supabase.client
+        .from('chargers')
+        .select('id, name, charge_box_id')
+        .eq('charge_box_id', body.charge_box_id)
+        .single();
+      charger = data;
+    }
+
+    if (!charger) {
+      return NextResponse.json({ error: 'Charger not found' }, { status: 404 });
+    }
+
+    // Verify connector exists
+    const { data: connector } = await supabase.client
+      .from('connectors')
+      .select('id, connector_idx, connector_type')
+      .eq('charger_id', charger.id)
+      .eq('connector_idx', body.connector_id)
+      .single();
+
+    if (!connector) {
+      return NextResponse.json(
+        { error: `Connector ${body.connector_id} not found on charger ${charger.id}` },
+        { status: 404 }
+      );
+    }
+
+    // Verify tag exists and get its type
+    const { data: tag } = await supabase.client
+      .from('ocpp_tags')
+      .select('id_tag, tag_type, steve_tag_pk')
+      .eq('id_tag', body.tag_id)
+      .single();
+
+    if (!tag) {
+      return NextResponse.json({ error: 'OCPP tag not found' }, { status: 404 });
+    }
+
+    // For user tags, verify the user has permission
+    if (tag.tag_type === 'user') {
+      const userTag = await supabase.getUserByNanoidTag(body.tag_id);
+      if (!userTag) {
+        return NextResponse.json({ error: 'User tag not linked to any user' }, { status: 403 });
+      }
+    }
+
+    // Initialize SteVe service
+    const steveService = new SteVeService({
+      serverUrl: process.env.STEVE_SERVER_URL!,
+      username: process.env.STEVE_USERNAME!,
+      password: process.env.STEVE_PASSWORD!,
+      authKey: process.env.STEVE_AUTH_KEY!,
+    });
+
+    await steveService.authenticate();
+
+    // Check connector status
+    const connectorStatus = await steveService.getChargePointConnectors(charger.charge_box_id);
+    const targetConnector = connectorStatus.find((c) => c.connectorId === body.connector_id);
+
+    if (!targetConnector) {
+      await steveService.logout();
+      return NextResponse.json(
+        { error: `Connector ${body.connector_id} status not available` },
+        { status: 503 }
+      );
+    }
+
+    if (!['Available', 'Preparing'].includes(targetConnector.status)) {
+      await steveService.logout();
+      return NextResponse.json(
+        {
+          error: `Connector ${body.connector_id} is not available`,
+          current_status: targetConnector.status,
+        },
+        { status: 409 }
+      );
+    }
+
+    // Execute RemoteStartTransaction
+    const result = await steveService.remoteStartTransaction(
+      charger.charge_box_id,
+      body.connector_id,
+      body.tag_id
+    );
+
+    await steveService.logout();
+
+    // If successful, the transaction will be created by the charger
+    // We return the request details and result
+    return NextResponse.json(
+      {
+        message: 'Transaction start request sent successfully',
+        request: {
+          charger: {
+            id: charger.id,
+            name: charger.name,
+            charge_box_id: charger.charge_box_id,
+          },
+          connector: {
+            id: connector.id,
+            connector_idx: connector.connector_idx,
+            connector_type: connector.connector_type,
+          },
+          tag: {
+            id: tag.id_tag,
+            type: tag.tag_type,
+            steve_pk: tag.steve_tag_pk,
+          },
+        },
+        ocpp_result: result,
+        timestamp: new Date().toISOString(),
+        note: 'Transaction will appear in the system once the charger confirms the start',
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error('Error creating transaction:', error);
+
     if (error instanceof ValidationError) {
       return createValidationErrorResponse(error);
     }

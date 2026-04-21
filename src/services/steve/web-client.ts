@@ -20,6 +20,8 @@ import type {
   UserQuery,
   SystemStatus,
   ConnectorStatus,
+  OcppTaskResult,
+  OcppTaskStatus,
 } from './types';
 import { SteVeError } from './types';
 
@@ -272,7 +274,7 @@ export class SteVeWebClient extends SteVeBaseClient {
   // OCPP Operations
 
   /**
-   * Execute OCPP operation
+   * Execute OCPP operation and wait for result
    */
   async executeOcppOperation(
     operation: string,
@@ -282,13 +284,32 @@ export class SteVeWebClient extends SteVeBaseClient {
     const operationUrl = `/steve/manager/operations/${version}/${operation}`;
 
     try {
-      const response = await this.submitForm(operationUrl, request);
+      // Format the request data for SteVe's form expectations
+      const formData = await this.formatOcppOperationRequest(operation, request);
+      const response = await this.submitForm(operationUrl, formData);
 
-      // Parse response to determine success
+      // Parse response to determine success and extract task information
       const html = await response.text();
       const $ = cheerio.load(html);
 
-      // Look for success/error indicators
+      // Look for task page redirect (indicates operation was submitted)
+      const currentUrl = response.url;
+      const isTaskPage =
+        currentUrl.includes('/steve/manager/operations/') && currentUrl.includes('/task/');
+
+      if (isTaskPage) {
+        // Extract task ID from URL and wait for completion
+        const taskIdMatch = currentUrl.match(/\/task\/(\d+)/);
+        const taskId = taskIdMatch ? taskIdMatch[1] : null;
+
+        if (taskId) {
+          // Poll for task completion
+          const finalResult = await this.waitForTaskCompletion(operation, version, taskId);
+          return finalResult;
+        }
+      }
+
+      // Look for immediate success/error indicators (for operations that complete immediately)
       const hasError = $('.error, .alert-danger').length > 0;
       const successMessage = $('.success, .alert-success').text().trim();
 
@@ -304,6 +325,291 @@ export class SteVeWebClient extends SteVeBaseClient {
         status: 'Error',
         message: `Operation failed: ${error}`,
         timestamp: new Date(),
+      };
+    }
+  }
+
+  /**
+   * Wait for OCPP task to complete and return final result
+   */
+  private async waitForTaskCompletion(
+    operation: string,
+    version: 'v1.2' | 'v1.5' | 'v1.6',
+    taskId: string,
+    maxAttempts: number = 30,
+    intervalMs: number = 2000
+  ): Promise<OcppOperationResponse> {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const taskResult = await this.getOcppTaskStatus(operation, version, taskId);
+
+        // Check if task is complete
+        if (['OK', 'Rejected', 'Error'].includes(taskResult.status)) {
+          let details = null;
+
+          // Get detailed results if available
+          if (taskResult.hasDetails && taskResult.detailsUrl && taskResult.status === 'OK') {
+            details = await this.getOcppTaskDetails(taskResult.detailsUrl);
+          }
+
+          return {
+            success: taskResult.status === 'OK',
+            status: taskResult.status,
+            message: taskResult.result || `Operation ${taskResult.status.toLowerCase()}`,
+            timestamp: new Date(),
+            details: details,
+          };
+        }
+
+        // Wait before next attempt (except on last attempt)
+        if (attempt < maxAttempts - 1) {
+          await new Promise((resolve) => setTimeout(resolve, intervalMs));
+        }
+      } catch (error) {
+        console.error(`Error checking task status (attempt ${attempt + 1}):`, error);
+
+        // On last attempt, return error
+        if (attempt === maxAttempts - 1) {
+          return {
+            success: false,
+            status: 'Error',
+            message: `Failed to get task result after ${maxAttempts} attempts: ${error}`,
+            timestamp: new Date(),
+          };
+        }
+
+        // Wait before retry
+        await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      }
+    }
+
+    // Timeout
+    return {
+      success: false,
+      status: 'Timeout',
+      message: `Operation timed out after ${(maxAttempts * intervalMs) / 1000} seconds`,
+      timestamp: new Date(),
+    };
+  }
+
+  /**
+   * Get OCPP task status and result
+   */
+  async getOcppTaskStatus(
+    operation: string,
+    version: 'v1.2' | 'v1.5' | 'v1.6',
+    taskId: string
+  ): Promise<OcppTaskResult> {
+    const taskUrl = `/steve/manager/operations/${version}/${operation}/task/${taskId}`;
+
+    try {
+      const $ = await this.fetchHtml(`${this.config.serverUrl}${taskUrl}`);
+
+      // Parse task status from the page
+      const statusText = $('td:contains("Status:")').next().text().trim();
+      const resultText = $('td:contains("Result:")').next().text().trim();
+
+      // Check for details link
+      const detailsLink = $('a:contains("Details")').attr('href');
+      const hasDetails = !!detailsLink;
+
+      // Map status text to our enum
+      let status: OcppTaskStatus = 'Pending';
+      if (statusText.includes('Accepted')) status = 'Accepted';
+      else if (statusText.includes('Rejected')) status = 'Rejected';
+      else if (statusText.includes('OK')) status = 'OK';
+      else if (statusText.includes('Error')) status = 'Error';
+
+      return {
+        taskId,
+        status,
+        result: resultText || undefined,
+        hasDetails,
+        detailsUrl: detailsLink ? `${this.config.serverUrl}${detailsLink}` : undefined,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      return {
+        taskId,
+        status: 'Error',
+        result: `Failed to fetch task status: ${error}`,
+        hasDetails: false,
+        timestamp: new Date(),
+      };
+    }
+  }
+
+  /**
+   * Get detailed OCPP task result (for operations like GetConfiguration)
+   */
+  async getOcppTaskDetails(detailsUrl: string): Promise<Record<string, unknown> | null> {
+    try {
+      const $ = await this.fetchHtml(detailsUrl);
+
+      // Parse the details page - this will vary by operation type
+      // For GetConfiguration, it typically shows a table of key-value pairs
+      const details: Record<string, unknown> = {};
+
+      // Look for configuration table (GetConfiguration results)
+      const configTable = $('table').filter((_, el) => {
+        return $(el).find('th:contains("Key"), th:contains("Value")').length > 0;
+      });
+
+      if (configTable.length > 0) {
+        const configurations: Array<{ key: string; value: string; readonly?: boolean }> = [];
+
+        configTable.find('tbody tr').each((_, row) => {
+          const cells = $(row).find('td');
+          if (cells.length >= 2) {
+            const key = $(cells[0]).text().trim();
+            const value = $(cells[1]).text().trim();
+            const readonly = cells.length > 2 ? $(cells[2]).text().trim() === 'true' : undefined;
+
+            configurations.push({ key, value, readonly });
+          }
+        });
+
+        details.configurations = configurations;
+      }
+
+      // Look for other common result patterns
+      const resultText = $('.result, .response').text().trim();
+      if (resultText) {
+        details.response = resultText;
+      }
+
+      return Object.keys(details).length > 0 ? details : null;
+    } catch (error) {
+      console.error('Failed to fetch task details:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Format OCPP operation request for SteVe form submission
+   * This method scrapes the actual form to understand the expected field structure
+   */
+  private async formatOcppOperationRequest(
+    operation: string,
+    request: OcppOperationRequest
+  ): Promise<Record<string, unknown>> {
+    const operationUrl = `/steve/manager/operations/v1.6/${operation}`;
+
+    try {
+      // First, scrape the operation form page to understand the structure
+      const $ = await this.fetchHtml(`${this.config.serverUrl}${operationUrl}`);
+
+      console.log(`Scraping form structure for ${operation}...`);
+
+      // Find the form and analyze its structure
+      const form = $('form').first();
+      const formData: Record<string, unknown> = {};
+
+      // Look for charge point selection field
+      const chargePointSelect = form.find(
+        'select[name*="chargeBox"], select[name*="ChargeBox"], input[name*="chargeBox"], input[name*="ChargeBox"]'
+      );
+      if (chargePointSelect.length > 0) {
+        const fieldName = chargePointSelect.attr('name');
+        console.log(`Found charge point field: ${fieldName}`);
+
+        if (fieldName) {
+          if (chargePointSelect.is('select[multiple]')) {
+            formData[fieldName] = [request.chargeBoxId];
+          } else {
+            formData[fieldName] = request.chargeBoxId;
+          }
+        }
+      }
+
+      // Analyze all form fields to understand the structure
+      form.find('input, select, textarea').each((_, element) => {
+        const $el = $(element);
+        const name = $el.attr('name');
+        const type = $el.attr('type');
+        const tagName = $el.prop('tagName')?.toLowerCase();
+
+        if (name && name !== '_csrf') {
+          console.log(`Form field: ${name} (${tagName}${type ? `:${type}` : ''})`);
+
+          // Map our request fields to the actual form field names
+          switch (name.toLowerCase()) {
+            case 'key':
+            case 'keys':
+              if (operation === 'GetConfiguration' && request.key && Array.isArray(request.key)) {
+                if ($el.is('select[multiple]')) {
+                  formData[name] = request.key;
+                } else {
+                  // If it's a single field, join the keys
+                  formData[name] = request.key.join(',');
+                }
+              } else if (operation === 'ChangeConfiguration' && request.key) {
+                formData[name] = request.key;
+              }
+              break;
+
+            case 'value':
+              if (request.value) formData[name] = request.value;
+              break;
+
+            case 'connectorid':
+            case 'connector_id':
+            case 'connector':
+              if (request.connectorId) formData[name] = request.connectorId;
+              break;
+
+            case 'idtag':
+            case 'id_tag':
+            case 'tag':
+              if (request.idTag) formData[name] = request.idTag;
+              break;
+
+            case 'transactionid':
+            case 'transaction_id':
+            case 'transaction':
+              if (request.transactionId) formData[name] = request.transactionId;
+              break;
+
+            case 'resettype':
+            case 'reset_type':
+            case 'type':
+              if (request.resetType) formData[name] = request.resetType;
+              break;
+
+            case 'vendorid':
+            case 'vendor_id':
+            case 'vendor':
+              if (request.vendorId) formData[name] = request.vendorId;
+              break;
+
+            case 'messageid':
+            case 'message_id':
+            case 'message':
+              if (request.messageId) formData[name] = request.messageId;
+              break;
+
+            case 'data':
+              if (request.data) formData[name] = request.data;
+              break;
+
+            case 'expiry':
+            case 'expirydate':
+            case 'expiry_date':
+              if (request.expiry) formData[name] = request.expiry;
+              break;
+          }
+        }
+      });
+
+      console.log('Final form data:', formData);
+      return formData;
+    } catch (error) {
+      console.error('Error scraping form structure:', error);
+
+      // Fallback to basic mapping if scraping fails
+      return {
+        chargeBoxIds: [request.chargeBoxId],
+        ...request,
       };
     }
   }

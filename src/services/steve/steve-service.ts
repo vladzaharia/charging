@@ -26,6 +26,7 @@ import type {
   OcppOperationRequest,
   OcppOperationResponse,
   ConnectorStatus,
+  OcppTaskResult,
 } from './types';
 
 export class SteVeService {
@@ -463,6 +464,24 @@ export class SteVeService {
     request: OcppOperationRequest
   ): Promise<OcppOperationResponse> {
     return this.webClient.executeOcppOperation(operation, version, request);
+  }
+
+  /**
+   * Get OCPP task status and result
+   */
+  async getOcppTaskStatus(
+    operation: string,
+    version: 'v1.2' | 'v1.5' | 'v1.6',
+    taskId: string
+  ): Promise<OcppTaskResult> {
+    return this.webClient.getOcppTaskStatus(operation, version, taskId);
+  }
+
+  /**
+   * Get detailed OCPP task result
+   */
+  async getOcppTaskDetails(detailsUrl: string): Promise<Record<string, unknown> | null> {
+    return this.webClient.getOcppTaskDetails(detailsUrl);
   }
 
   // Health Check

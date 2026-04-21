@@ -216,6 +216,36 @@ export interface OcppOperationResponse {
   status?: string;
   message?: string;
   timestamp: Date;
+  taskId?: string;
+  taskUrl?: string;
+  details?: Record<string, unknown> | null;
+}
+
+// OCPP Task Management Types
+export interface OcppTask {
+  taskId: string;
+  operation: string;
+  chargeBoxId: string;
+  status: OcppTaskStatus;
+  result?: string;
+  resultDetails?: string;
+  hasDetails: boolean;
+  detailsUrl?: string;
+  submittedAt: Date;
+  completedAt?: Date;
+  errorMessage?: string;
+}
+
+export type OcppTaskStatus = 'Pending' | 'Accepted' | 'Rejected' | 'OK' | 'Error' | 'Timeout';
+
+export interface OcppTaskResult {
+  taskId: string;
+  status: OcppTaskStatus;
+  result?: string;
+  details?: Record<string, unknown>;
+  hasDetails: boolean;
+  detailsUrl?: string;
+  timestamp: Date;
 }
 
 // Query Parameters

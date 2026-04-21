@@ -3,6 +3,30 @@ import { supabase } from '@/services/supabase';
 import { NextResponse } from 'next/server';
 import { ValidationError, createValidationErrorResponse } from '@/middleware/validation/middleware';
 
+/**
+ * Helper function to get human-readable tag classification
+ */
+function getTagClassification(tagType: string, tagId: string): string {
+  switch (tagType) {
+    case 'admin':
+      return 'Administrative Tag';
+    case 'physical':
+      if (tagId.startsWith('OCPP-')) {
+        return 'Physical User Tag';
+      }
+      return 'Physical RFID Card';
+    case 'user':
+      return 'Remote Access Tag';
+    case 'meta':
+      if (tagId === 'POLARIS-EXPRESS') {
+        return 'Polaris Express Meta-Tag';
+      }
+      return 'System Meta-Tag';
+    default:
+      return 'Unknown Tag Type';
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
@@ -36,7 +60,7 @@ export async function GET(request: Request) {
     // Get all OCPP tags with hierarchical structure from SteVe
     const allTags = await steveService.getOcppTags();
 
-    // Enhance tags with database transaction counts (including children)
+    // Enhance tags with database transaction counts and classification (including children)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const enhanceTag = async (tag: any): Promise<any> => {
       // Get transaction count from database for this tag
@@ -52,6 +76,20 @@ export async function GET(request: Request) {
         .eq('ocpp_tag_id', tag.idTag)
         .eq('is_active', true);
 
+      // Get tag classification from database
+      const { data: dbTag } = await supabase.client
+        .from('ocpp_tags')
+        .select('tag_type')
+        .eq('id_tag', tag.idTag)
+        .single();
+
+      // Get user links for this tag (if it's linkable)
+      const { count: linkedUserCount } = await supabase.client
+        .from('user_tag_links')
+        .select('*', { count: 'exact', head: true })
+        .eq('tag_id', tag.idTag)
+        .eq('is_active', true);
+
       // Enhance children recursively
       const enhancedChildren = tag.children
         ? await Promise.all(tag.children.map(enhanceTag))
@@ -62,6 +100,9 @@ export async function GET(request: Request) {
         children: enhancedChildren,
         database_transaction_count: transactionCount || 0,
         database_active_transaction_count: activeTransactionCount || 0,
+        tag_type: dbTag?.tag_type || 'admin',
+        linked_user_count: linkedUserCount || 0,
+        is_linkable: ['physical', 'meta'].includes(dbTag?.tag_type || 'admin'),
       };
     };
 
@@ -132,18 +173,22 @@ export async function GET(request: Request) {
           parent_pk: tag.parentOcppTagPk || null,
           status: tag.blocked ? 'blocked' : 'active',
           in_transaction: tag.inTransaction,
+          type: tag.tag_type,
+          classification: getTagClassification(tag.tag_type, tag.idTag),
         },
         // Tag configuration
         config: {
           expiry_date: tag.expiryDate || null,
           max_active_transactions: tag.maxActiveTransactionCount || 1,
           note: tag.note || null,
+          is_linkable: tag.is_linkable,
         },
         // Usage statistics from database
         usage: {
           total_transactions: tag.database_transaction_count,
           active_transactions: tag.database_active_transaction_count,
           steve_active_count: tag.activeTransactionCount,
+          linked_users: tag.linked_user_count,
         },
         // Hierarchy information
         hierarchy: {
@@ -163,6 +208,13 @@ export async function GET(request: Request) {
           count: paginatedTags.length,
           total: totalCount,
           structure: query.flat ? 'flat' : 'hierarchical',
+          tag_types: {
+            admin: paginatedTags.filter((t) => t.tag_type === 'admin').length,
+            physical: paginatedTags.filter((t) => t.tag_type === 'physical').length,
+            user: paginatedTags.filter((t) => t.tag_type === 'user').length,
+            meta: paginatedTags.filter((t) => t.tag_type === 'meta').length,
+          },
+          linkable_tags: paginatedTags.filter((t) => t.is_linkable).length,
           filters_applied: {
             search: query.q || null,
             parent_only: query.parent_only || false,
